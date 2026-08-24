@@ -1,0 +1,1621 @@
+<title>Leonyx Northside Booth</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&amp;family=Source+Sans+3:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f1e6;
+    --surface: #fbf6ea;
+    --surface-2: #f0e9d8;
+    --ink: #211c14;
+    --ink-soft: #6b6252;
+    --border: #ddd3bd;
+    --accent: #96731f;
+    --accent-strong: #7a5c16;
+    --accent-soft: rgba(150, 115, 31, 0.1);
+    --on-accent: #fffaf0;
+    --shadow: rgba(33, 28, 20, 0.08);
+    --glow-weak: rgba(212, 169, 74, 0.14);
+
+    /* Motion tokens: one small set of durations + easings, applied by role.
+       fast = snap interactions (press, hover, dot switch)
+       base = small UI fades/lifts        slide = deck slide changes
+       ambient = idle holo/glow loops (staggered via negative delays) */
+    --dur-fast: 0.15s;
+    --dur-base: 0.25s;
+    --dur-slide: 0.4s;
+    --ease-snap: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-glide: cubic-bezier(0.22, 1, 0.36, 1);
+
+    /* Ambient beats: every idle loop uses one of these three speeds,
+       layered with negative delays so effects never pulse in sync */
+    --dur-breathe: 3s;   /* glow, gem glint, shimmer, micro-scale */
+    --dur-spin: 4.5s;    /* rotating conic holo layers */
+    --dur-drift: 5s;     /* idle foil drift + edge rainbow cycle */
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12100c;
+      --surface: #1c1812;
+      --surface-2: #241e15;
+      --ink: #f3ede0;
+      --ink-soft: #a89d86;
+      --border: #34291a;
+      --accent: #d4a94a;
+      --accent-strong: #f0c766;
+      --accent-soft: rgba(212, 169, 74, 0.14);
+      --on-accent: #16130c;
+      --shadow: rgba(0, 0, 0, 0.4);
+      --glow-weak: rgba(212, 169, 74, 0.14);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #12100c;
+    --surface: #1c1812;
+    --surface-2: #241e15;
+    --ink: #f3ede0;
+    --ink-soft: #a89d86;
+    --border: #34291a;
+    --accent: #d4a94a;
+    --accent-strong: #f0c766;
+    --accent-soft: rgba(212, 169, 74, 0.14);
+    --on-accent: #16130c;
+    --shadow: rgba(0, 0, 0, 0.4);
+    --glow-weak: rgba(212, 169, 74, 0.14);
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+
+  #leonyxApp {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  .wordmark {
+    font-family: "Big Shoulders Display", ui-sans-serif, sans-serif;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+  }
+
+  .mono-label {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  /* ============ Deck (the card itself) ============ */
+  .deck {
+    position: relative;
+    width: 76%;
+    height: 100vh;
+    height: 100dvh;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    box-shadow:
+      0 34px 80px -38px var(--shadow),
+      0 1px 0 rgba(255,255,255,0.35) inset;
+    overflow: hidden;
+    transform:
+      perspective(1000px)
+      rotateX(var(--ry, 0deg))
+      rotateY(calc(var(--rx, 0deg) + var(--nudge, 0deg)))
+      scale(var(--ds, 1));
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+  /* Small phones stay near full-width; the 76% narrowing is for wider screens */
+  @media (max-width: 420px) {
+    .deck { width: 94%; }
+  }
+
+  .deck::before {
+    content: "";
+    position: absolute;
+    inset: 8px;
+    border: 1px solid var(--accent-soft);
+    border-radius: 16px;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* Faint ambient rainbow that drifts across the card even when idle */
+  .foil-idle {
+    position: absolute;
+    inset: -40%;
+    z-index: 3;
+    pointer-events: none;
+    opacity: 0;
+    mix-blend-mode: overlay;
+    background: linear-gradient(115deg,
+      transparent 30%,
+      rgba(255,140,170,0.16) 40%,
+      rgba(255,215,130,0.16) 47%,
+      rgba(140,235,180,0.16) 54%,
+      rgba(120,190,255,0.16) 61%,
+      transparent 72%);
+    background-size: 240% 240%;
+    animation: foilDrift var(--dur-drift) ease-in-out infinite;
+  }
+  @keyframes foilDrift {
+    0%, 22% { opacity: 0; background-position: 110% 0%; }
+    34% { opacity: 0.85; }
+    60% { opacity: 0; background-position: -10% 100%; }
+    100% { opacity: 0; background-position: -10% 100%; }
+  }
+
+  /* Pointer-driven holo foil: glare hotspot + rotating conic rainbow */
+  .foil-sheen {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+    opacity: var(--sheen-opacity, 0);
+    transition: opacity var(--dur-fast) ease;
+    mix-blend-mode: overlay;
+    background:
+      radial-gradient(circle at calc(var(--mx, 50%) - 9%) calc(var(--my, 50%) - 11%),
+        rgba(255,255,255,0.65), transparent 40%),
+      conic-gradient(from var(--ma, 90deg) at var(--mx, 50%) var(--my, 50%),
+        rgba(255,105,145,0.42), rgba(255,200,105,0.42), rgba(150,255,185,0.42),
+        rgba(115,190,255,0.42), rgba(205,140,255,0.42), rgba(255,105,145,0.42));
+  }
+  /* Fine holo grain lines, like a stamped refractor */
+  .foil-sheen::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(var(--ma, 90deg),
+        rgba(255,255,255,0.14) 0 1px, transparent 1px 6px),
+      repeating-linear-gradient(calc(var(--ma, 90deg) + 60deg),
+        rgba(255,255,255,0.08) 0 1px, transparent 1px 9px);
+  }
+  /* Secondary parallax glare, offset opposite the pointer for depth */
+  .foil-sheen::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at calc(var(--mx, 50%) + 14%) calc(var(--my, 50%) + 16%),
+        rgba(255,230,160,0.35), transparent 34%);
+  }
+  /* Sparkle glints spawned along the pointer trail */
+  .glint {
+    position: absolute;
+    z-index: 5;
+    pointer-events: none;
+    width: var(--gs, 8px);
+    height: var(--gs, 8px);
+    margin: calc(var(--gs, 8px) / -2) 0 0 calc(var(--gs, 8px) / -2);
+    background: radial-gradient(circle, #fff 0%, rgba(240,199,102,0.9) 45%, transparent 70%);
+    clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+    animation: glintPop 0.4s ease-out forwards;
+  }
+  @keyframes glintPop {
+    0% { transform: scale(0) rotate(0deg); opacity: 1; }
+    55% { transform: scale(1.15) rotate(90deg); opacity: 0.95; }
+    100% { transform: scale(0.2) rotate(150deg); opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .glint { display: none; }
+  }
+
+  /* ============ Rarity glow: alive, breathing, staggered ============ */
+  @keyframes rarityGlow {
+    0%, 100% {
+      box-shadow:
+        0 0 6px 1px var(--glow-weak),
+        0 12px 28px -12px var(--shadow);
+    }
+    50% {
+      box-shadow:
+        0 0 32px 9px var(--accent-soft),
+        0 12px 28px -12px var(--shadow);
+    }
+  }
+  @keyframes breatheScale {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.008); }
+  }
+  .btn-primary { animation: rarityGlow var(--dur-breathe) ease-in-out infinite; }
+  .price-card.featured { animation: rarityGlow var(--dur-breathe) ease-in-out infinite, shimmerBorder var(--dur-breathe) linear infinite; animation-delay: -1s, 0s; }
+  .qr-frame { animation: rarityGlow var(--dur-breathe) ease-in-out infinite, breatheScale var(--dur-breathe) ease-in-out infinite; animation-delay: -1.8s, -1s; }
+
+  /* Shimmering sweep across the featured price card's surface */
+  @keyframes shimmerBorder {
+    0% { background-position: 130% 0; }
+    55%, 100% { background-position: -130% 0; }
+  }
+  .price-card.featured {
+    background-image: linear-gradient(115deg,
+      transparent 0 38%, var(--accent-soft) 46%,
+      rgba(240,199,102,0.28) 50%, var(--accent-soft) 54%,
+      transparent 62% 100%);
+    background-size: 220% 100%;
+    background-repeat: no-repeat;
+  }
+
+  /* ============ Pack-opening intro ============ */
+  @keyframes packFade {
+    0% { opacity: 1; }
+    79% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  @keyframes stageIn {
+    0% { transform: scale(0.55); filter: blur(6px); opacity: 0; }
+    60% { transform: scale(1.05); filter: blur(0); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes packWiggle {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    18% { transform: rotate(-2.3deg) scale(1.012); }
+    36% { transform: rotate(2deg) scale(1.006); }
+    54% { transform: rotate(-2.7deg) scale(1.022); }
+    72% { transform: rotate(2.4deg) scale(1.016); }
+    88% { transform: rotate(-1.5deg) scale(1.03); }
+  }
+  @keyframes sheenSweep {
+    0% { transform: translateX(-130%) skewX(-18deg); opacity: 0; }
+    15% { opacity: 1; }
+    85% { opacity: 1; }
+    100% { transform: translateX(130%) skewX(-18deg); opacity: 0; }
+  }
+  @keyframes ripTop {
+    to { transform: translateY(-112%) rotate(-7deg); }
+  }
+  @keyframes ripBottom {
+    to { transform: translateY(112%) rotate(6deg); }
+  }
+  @keyframes tearFlash {
+    0% { transform: scaleY(0); opacity: 0; }
+    30% { transform: scaleY(1); opacity: 1; }
+    100% { transform: scaleY(1.2); opacity: 0; }
+  }
+  @keyframes flashPop {
+    0% { opacity: 0; transform: scale(0.35); }
+    28% { opacity: 1; transform: scale(1.06); }
+    100% { opacity: 0; transform: scale(1.95); }
+  }
+  @keyframes ringExpand {
+    0% { opacity: 0.95; transform: translate(-50%, -50%) scale(0.15); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(2.4); }
+  }
+  @keyframes revealRise {
+    0% { transform: translateY(34%) scale(0.55); opacity: 0; }
+    55% { opacity: 1; }
+    78% { transform: translateY(-3%) scale(1.03); }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  @keyframes revealGlow {
+    0%, 100% { box-shadow: 0 0 22px 4px rgba(240,199,102,0.35), 0 26px 70px -20px rgba(0,0,0,0.6); }
+    50% { box-shadow: 0 0 54px 14px rgba(240,199,102,0.55), 0 26px 70px -20px rgba(0,0,0,0.6); }
+  }
+
+  #packIntro {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    animation: packFade 2.9s ease forwards;
+    cursor: pointer;
+  }
+  .pack-stage {
+    position: relative;
+    width: min(64vw, 250px);
+    aspect-ratio: 5 / 7;
+    animation: stageIn 0.4s var(--ease-snap) both;
+  }
+  .pack-face {
+    position: absolute;
+    inset: 0;
+    border-radius: 18px;
+    background:
+      radial-gradient(circle at 30% 18%, rgba(255,236,180,0.22), transparent 52%),
+      radial-gradient(circle at 50% 58%, rgba(240,199,102,0.16), transparent 44%),
+      conic-gradient(from 210deg at 50% 58%,
+        rgba(255,110,145,0.34), rgba(255,205,110,0.34), rgba(150,255,185,0.34),
+        rgba(120,190,255,0.34), rgba(205,140,255,0.34), rgba(255,110,145,0.34)),
+      linear-gradient(168deg, #241d13 0%, #171310 55%, #241d13 100%);
+    border: 1px solid rgba(240,199,102,0.5);
+    box-shadow: 0 24px 70px -22px rgba(0,0,0,0.65);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    overflow: hidden;
+  }
+  .pack-face span {
+    font-family: "Big Shoulders Display", sans-serif;
+    font-weight: 900;
+    font-size: clamp(1.7rem, 8vw, 2.3rem);
+    color: #f0c766;
+    letter-spacing: 0.04em;
+    text-shadow: 0 2px 14px rgba(0,0,0,0.5);
+  }
+  .pack-face em {
+    font-family: "IBM Plex Mono", monospace;
+    font-style: normal;
+    font-weight: 600;
+    font-size: clamp(0.55rem, 2.6vw, 0.66rem);
+    letter-spacing: 0.28em;
+    color: rgba(240,199,102,0.75);
+    text-transform: uppercase;
+  }
+  .pack-top { clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%); animation: packWiggle 0.8s ease-in-out 0.6s, ripTop 0.42s cubic-bezier(.6,0,.85,.4) 1.42s forwards; }
+  .pack-bottom { clip-path: polygon(0 50%, 100% 50%, 100% 100%, 0 100%); animation: packWiggle 0.8s ease-in-out 0.6s, ripBottom 0.42s cubic-bezier(.6,0,.85,.4) 1.42s forwards; }
+  .pack-tearline {
+    position: absolute;
+    left: 4%; right: 4%; top: 50%;
+    height: 3px;
+    margin-top: -1.5px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, #ffe9ad 20%, #fff 50%, #ffe9ad 80%, transparent);
+    transform: scaleY(0);
+    animation: tearFlash 0.28s ease-out 1.4s forwards;
+    z-index: 3;
+  }
+  .pack-shine {
+    position: absolute;
+    top: -12%;
+    bottom: -12%;
+    left: 0;
+    width: 34%;
+    z-index: 2;
+    background: linear-gradient(90deg, transparent, rgba(255,245,214,0.5), transparent);
+    animation: sheenSweep 0.7s ease-in-out 0.6s forwards;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .pack-flash {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+    opacity: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(255,250,235,0.95) 0%, rgba(240,199,102,0.55) 30%, transparent 62%);
+    animation: flashPop 0.45s ease-out 1.46s forwards;
+  }
+  .pack-ring {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: min(64vw, 250px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 2px solid rgba(240,199,102,0.8);
+    opacity: 0;
+    pointer-events: none;
+    animation: ringExpand 0.7s cubic-bezier(.2,.7,.3,1) 1.5s forwards;
+  }
+  .pack-reveal {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    animation: revealRise 0.75s var(--ease-snap) 1.55s forwards;
+  }
+  .reveal-card {
+    width: 76%;
+    aspect-ratio: 3 / 4;
+    border-radius: 16px;
+    border: 1px solid rgba(240,199,102,0.75);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    background:
+      radial-gradient(circle at 28% 22%, rgba(255,255,255,0.4), transparent 48%),
+      conic-gradient(from 0deg at var(--rmx, 50%) var(--rmy, 50%),
+        rgba(255,110,145,0.5), rgba(255,205,110,0.5), rgba(150,255,185,0.5),
+        rgba(120,190,255,0.5), rgba(205,140,255,0.5), rgba(255,110,145,0.5));
+    animation: revealGlow calc(var(--dur-breathe) * 0.4) ease-in-out 1.55s infinite, holoSpin var(--dur-spin) linear 1.55s infinite;
+  }
+  @keyframes holoSpin {
+    0% { --rmx: 20%; --rmy: 20%; }
+    50% { --rmx: 80%; --rmy: 75%; }
+    100% { --rmx: 20%; --rmy: 20%; }
+  }
+  @property --rmx { syntax: "<percentage>"; inherits: false; initial-value: 50%; }
+  @property --rmy { syntax: "<percentage>"; inherits: false; initial-value: 50%; }
+  .reveal-card span.reveal-word {
+    font-family: "Big Shoulders Display", sans-serif;
+    font-weight: 900;
+    font-size: clamp(1.5rem, 7vw, 2rem);
+    color: #fffaf0;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.4);
+    letter-spacing: 0.03em;
+  }
+  .reveal-card span.reveal-sub {
+    font-family: "IBM Plex Mono", monospace;
+    font-weight: 600;
+    font-size: clamp(0.5rem, 2.4vw, 0.62rem);
+    letter-spacing: 0.24em;
+    color: rgba(255,250,240,0.85);
+    text-transform: uppercase;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #packIntro { display: none; }
+  }
+
+  /* ============ Slides ============ */
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: clamp(1.6rem, 5vw, 2.6rem) clamp(1.4rem, 5vw, 2.2rem) 6rem;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.96) translateY(8px);
+    transition: opacity 0.18s ease;
+    overflow-y: auto;
+  }
+  .slide.active { opacity: 1; pointer-events: auto; transform: scale(1) translateY(0); }
+  /* Direction-aware entrances: cards slide in like they're dealt from a hand */
+  .slide.enter-next { animation: dealFromRight var(--dur-slide) var(--ease-glide); }
+  .slide.enter-prev { animation: dealFromLeft var(--dur-slide) var(--ease-glide); }
+  @keyframes dealFromRight {
+    0% { opacity: 0; transform: perspective(800px) translateX(76px) rotateY(-12deg) scale(0.96); }
+    55% { opacity: 1; }
+    80% { transform: perspective(800px) translateX(-5px) rotateY(1.6deg) scale(1.008); }
+    100% { opacity: 1; transform: perspective(800px) translateX(0) rotateY(0deg) scale(1); }
+  }
+  @keyframes dealFromLeft {
+    0% { opacity: 0; transform: perspective(800px) translateX(-76px) rotateY(12deg) scale(0.96); }
+    55% { opacity: 1; }
+    80% { transform: perspective(800px) translateX(5px) rotateY(-1.6deg) scale(1.008); }
+    100% { opacity: 1; transform: perspective(800px) translateX(0) rotateY(0deg) scale(1); }
+  }
+
+  .slide-kicker { font-size: 0.68rem; margin: 0 0 1rem; text-align: center; }
+
+  .slide h2.slide-title {
+    font-family: "Big Shoulders Display", sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.5rem, 6vw, 2.1rem);
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    text-align: center;
+    margin: 0 0 0.6rem;
+  }
+  .slide h2.slide-title span { color: var(--accent); }
+
+  .slide-sub {
+    color: var(--ink-soft);
+    font-size: 0.92rem;
+    text-align: center;
+    max-width: 40ch;
+    margin: 0 auto 1.3rem;
+  }
+
+  /* Slide 1: title */
+  .s-title { text-align: center; }
+  .s-title .wordmark { font-size: clamp(2.4rem, 12vw, 3.4rem); margin-bottom: 0.3rem; }
+  .s-title .tagline {
+    font-family: "Big Shoulders Display", sans-serif;
+    font-weight: 700;
+    font-size: clamp(1.05rem, 4vw, 1.3rem);
+    color: var(--ink-soft);
+    margin: 0 0 1.6rem;
+  }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-bottom: 1.8rem; }
+  .pill {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: var(--ink-soft);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.35rem 0.8rem;
+    transition: border-color var(--dur-fast) ease, color var(--dur-fast) ease, transform var(--dur-fast) var(--ease-snap);
+  }
+  .pill:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); }
+  .event-badge {
+    display: inline-block;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    border: 1px solid var(--accent-soft);
+    background: var(--accent-soft);
+    border-radius: 999px;
+    padding: 0.4rem 1rem;
+  }
+
+  /* stat / big number */
+  .big-stat {
+    font-family: "Big Shoulders Display", sans-serif;
+    font-weight: 900;
+    font-size: clamp(3.2rem, 16vw, 4.4rem);
+    color: var(--accent);
+    text-align: center;
+    line-height: 1;
+    margin-bottom: 0.4rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* card grids */
+  .cards { display: flex; flex-direction: column; gap: 0.65rem; margin-top: 0.6rem; }
+  .card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    transition: border-color var(--dur-fast) ease, transform var(--dur-base) var(--ease-snap), box-shadow var(--dur-base) ease;
+  }
+  .card:hover { border-color: var(--accent-soft); transform: translateY(-2px); box-shadow: 0 8px 20px -12px var(--shadow); }
+  .card-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.25rem; }
+  .card-body { font-size: 0.82rem; color: var(--ink-soft); }
+  .card.panel { display: grid; grid-template-columns: auto 1fr; gap: 0.7rem; align-items: start; }
+  .panel-tag {
+    font-family: "IBM Plex Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--accent);
+    padding-top: 0.1rem;
+  }
+  .card.panel .card-title { font-style: italic; }
+
+  /* steps */
+  .steps { display: flex; flex-direction: column; gap: 0.7rem; margin-top: 0.6rem; }
+  .step { display: grid; grid-template-columns: auto 1fr; gap: 0.7rem; align-items: start; }
+  .step-num {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-soft);
+    color: var(--accent);
+    font-family: "IBM Plex Mono", monospace;
+    font-weight: 700;
+    font-size: 0.75rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform var(--dur-fast) var(--ease-snap), background var(--dur-fast) ease;
+  }
+  .step:hover .step-num { transform: scale(1.18); background: var(--accent); color: var(--on-accent); }
+
+  /* quote + stat strip (results slide) */
+  .quote-block {
+    background: var(--surface-2);
+    border-left: 3px solid var(--accent);
+    border-radius: 10px;
+    padding: 0.9rem 1.1rem;
+    font-size: 0.85rem;
+    font-style: italic;
+    margin-bottom: 1rem;
+  }
+  .quote-source { display: block; margin-top: 0.5rem; font-style: normal; font-size: 0.72rem; color: var(--ink-soft); }
+  .stat-strip { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .stat { padding: 0.8rem 0.4rem; text-align: center; border-left: 1px solid var(--border); transition: background var(--dur-fast) ease; }
+  .stat:first-child { border-left: none; }
+  .stat:hover { background: var(--accent-soft); }
+  .stat-num { font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; font-weight: 600; font-size: 0.98rem; color: var(--accent); }
+  .stat-label { font-size: 0.65rem; color: var(--ink-soft); margin-top: 0.15rem; }
+
+  /* pricing */
+  .price-grid { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.6rem; }
+  .price-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 0.9rem 1rem; position: relative; transition: transform var(--dur-base) var(--ease-snap), border-color var(--dur-fast) ease; }
+  .price-card:hover { transform: translateY(-3px); border-color: var(--accent-soft); }
+  .price-card.featured { border-color: var(--accent); }
+  .price-card.featured::before {
+    content: "MOST POPULAR";
+    position: absolute; top: -0.55rem; left: 1rem;
+    background: var(--accent); color: var(--on-accent);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.58rem; font-weight: 700; letter-spacing: 0.08em;
+    padding: 0.15rem 0.5rem; border-radius: 999px;
+  }
+  .price-row { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; }
+  .price-tier { font-weight: 700; font-size: 0.88rem; }
+  .price-amount { font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; font-weight: 600; font-size: 1.15rem; color: var(--accent); }
+  .price-feats { margin: 0.5rem 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.25rem; }
+  .price-feats li { font-size: 0.78rem; color: var(--ink-soft); }
+  .price-feats li::before { content: "\2713  "; color: var(--accent); }
+
+  /* CTA slide */
+  .s-cta { text-align: center; }
+  .qr-frame {
+    position: relative;
+    width: min(52vw, 200px);
+    height: min(52vw, 200px);
+    margin: 0.2rem auto 1rem;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--on-accent);
+    overflow: hidden;
+  }
+  .qr-frame svg { width: 100%; height: 100%; display: block; }
+  .qr-frame::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: var(--qr-sheen, 0);
+    transition: opacity var(--dur-fast) ease;
+    mix-blend-mode: overlay;
+    background:
+      radial-gradient(circle at var(--qx, 50%) var(--qy, 50%), rgba(255,255,255,0.6), transparent 45%),
+      linear-gradient(125deg, rgba(255,110,145,0.25), rgba(255,205,110,0.25), rgba(120,190,255,0.25));
+  }
+  .qr-frame.qr-pop { animation: qrPop 0.45s var(--ease-snap), rarityGlow var(--dur-breathe) ease-in-out infinite, breatheScale var(--dur-breathe) ease-in-out infinite; }
+  @keyframes qrPop {
+    0% { transform: scale(1); }
+    35% { transform: scale(1.09) rotate(-1.5deg); }
+    65% { transform: scale(0.98) rotate(1deg); }
+    100% { transform: scale(1) rotate(0deg); }
+  }
+  .cta-row { display: flex; flex-direction: column; gap: 0.55rem; max-width: 320px; margin: 0 auto; }
+  .btn {
+    position: relative;
+    display: block; width: 100%;
+    padding: 0.8rem 1rem; border-radius: 10px;
+    font-family: "Source Sans 3", sans-serif;
+    font-size: 0.95rem; font-weight: 700;
+    text-align: center; text-decoration: none; cursor: pointer;
+    border: 1px solid transparent;
+    overflow: hidden;
+    transition:
+      transform var(--dur-fast) var(--ease-snap),
+      background var(--dur-fast) ease,
+      border-color var(--dur-fast) ease,
+      color var(--dur-fast) ease,
+      box-shadow var(--dur-base) ease;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn:active { transform: translateY(1px) scale(0.96); transition-duration: 0.06s; }
+  .btn[hidden] { display: none; }
+  .btn-primary { background: var(--accent); color: var(--on-accent); box-shadow: 0 10px 24px -10px var(--accent-soft); }
+  .btn-primary:hover { background: var(--accent-strong); }
+  .btn-ghost { background: transparent; color: var(--ink); border-color: var(--border); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Click ripple inside buttons / nav buttons */
+  .ripple {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    background: currentColor;
+    opacity: 0.28;
+    transform: translate(-50%, -50%) scale(0);
+    animation: rippleOut 0.35s ease-out forwards;
+  }
+  @keyframes rippleOut {
+    to { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+  }
+
+  .signup-form { max-width: 320px; margin: 0.8rem auto 0; display: flex; flex-direction: column; gap: 0.5rem; text-align: left; }
+  .signup-form[hidden] { display: none; }
+  .signup-form label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; color: var(--ink-soft); }
+  .signup-form input {
+    width: 100%; padding: 0.6rem 0.7rem; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--bg); color: var(--ink);
+    font-family: "Source Sans 3", sans-serif; font-size: 0.92rem;
+    transition: border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease;
+  }
+  .signup-form input:focus-visible {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .signup-form input.shake { animation: inputShake 0.3s ease; border-color: #c0392b; }
+  @keyframes inputShake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(5px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(3px); }
+  }
+  .signup-note { font-size: 0.74rem; color: var(--ink-soft); margin: 0.1rem 0 0; }
+  .thanks {
+    margin-top: 0.8rem; padding: 0.7rem 1rem; border-radius: 10px;
+    background: var(--accent-soft); color: var(--accent-strong);
+    font-weight: 600; font-size: 0.88rem;
+  }
+  .pop-in { animation: popIn 0.3s var(--ease-snap); }
+  @keyframes popIn {
+    0% { opacity: 0; transform: translateY(10px) scale(0.94); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .row-in { animation: rowIn 0.3s var(--ease-snap) backwards; }
+  @keyframes rowIn {
+    0% { opacity: 0; transform: translateX(-14px); }
+    100% { opacity: 1; transform: translateX(0); }
+  }
+
+  .team-link { margin-top: 1.2rem; }
+  .linklike {
+    background: none; border: none; font-family: "IBM Plex Mono", monospace;
+    font-size: 0.68rem; color: var(--ink-soft); text-decoration: underline; text-underline-offset: 2px;
+    cursor: pointer; padding: 0;
+    transition: color var(--dur-fast) ease;
+  }
+  .linklike:active { transform: scale(0.96); }
+  .linklike:hover { color: var(--accent); }
+
+  #adminPanel { margin-top: 1rem; padding: 0.9rem; border: 1px dashed var(--border); border-radius: 12px; background: var(--surface-2); text-align: left; }
+  #adminPanel[hidden] { display: none; }
+  #adminPanel h4 { margin: 0 0 0.5rem; font-size: 0.8rem; font-weight: 700; }
+  #adminList { display: flex; flex-direction: column; gap: 0.4rem; }
+  .lead-row { padding: 0.5rem 0.65rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; font-size: 0.78rem; transition: border-color var(--dur-fast) ease, transform var(--dur-fast) ease; }
+  .lead-row:hover { border-color: var(--accent-soft); transform: translateX(2px); }
+  .lead-row .lead-name { font-weight: 700; }
+  .lead-row .lead-meta { color: var(--ink-soft); font-size: 0.72rem; }
+  .empty-note { font-size: 0.78rem; color: var(--ink-soft); }
+
+  /* nav */
+  .nav {
+    position: fixed;
+    bottom: calc(1.2rem + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 0.9rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.5rem 1rem;
+    box-shadow: 0 12px 30px -14px var(--shadow);
+    z-index: 5;
+  }
+  .nav button {
+    position: relative;
+    overflow: hidden;
+    background: none; border: none; cursor: pointer;
+    color: var(--ink); font-size: 1.1rem; line-height: 1;
+    padding: 0.2rem 0.35rem; border-radius: 6px;
+    transition: color var(--dur-fast) ease, transform var(--dur-fast) var(--ease-snap), opacity var(--dur-fast) ease;
+  }
+  .nav button:hover:not(:disabled) { color: var(--accent); transform: scale(1.18); }
+  .nav button:active:not(:disabled) { transform: scale(0.85); transition-duration: 0.06s; }
+  .nav button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .nav button:disabled { opacity: 0.3; cursor: default; }
+  .dots { display: flex; gap: 0.35rem; }
+  .dot {
+    width: 6px; height: 6px; border-radius: 999px;
+    background: var(--border);
+    cursor: pointer;
+    transition: background var(--dur-fast) ease, width var(--dur-base) var(--ease-snap), transform var(--dur-fast) ease;
+  }
+  .dot:hover { background: var(--accent-strong); transform: scale(1.3); }
+  .dot.active { background: var(--accent); width: 17px; transform: none; }
+  .counter {
+    font-family: "IBM Plex Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.68rem; color: var(--ink-soft); min-width: 2.6rem; text-align: center;
+  }
+  .counter.tick { animation: counterTick 0.25s var(--ease-snap); }
+  @keyframes counterTick {
+    0% { transform: translateY(6px); opacity: 0.2; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+
+  /* confetti burst — 3D tumbling shards with gravity */
+  .confetti-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;
+    overflow: visible;
+  }
+  .confetti-shard {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--cw, 7px);
+    height: var(--ch, 7px);
+    border-radius: 2px;
+    background: var(--accent);
+    opacity: 0;
+    animation: confettiBurst 0.9s cubic-bezier(.15,.55,.4,1) forwards;
+  }
+  @keyframes confettiBurst {
+    0% {
+      transform: translate(-50%, -50%) translate(0, 0)
+        rotate3d(var(--ax, 1), var(--ay, 0), 0, 0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(-50%, -50%)
+        translate(var(--dx, 0px), calc(var(--dy, -90px) + 60px))
+        rotate3d(var(--ax, 1), var(--ay, 0), 0, var(--spin, 360deg));
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .confetti-shard { display: none; }
+  }
+  /* ============ Layered foil depth (v2) ============ */
+  /* Fine engraved refractor lines; angle follows tilt (--ma inherits from deck) */
+  .foil-refract {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+    mix-blend-mode: soft-light;
+    opacity: 0.85;
+    background:
+      repeating-linear-gradient(var(--ma, 90deg),
+        rgba(255,255,255,0.1) 0 1px, transparent 1px 4px),
+      repeating-linear-gradient(calc(180deg - var(--ma, 90deg)),
+        rgba(170,200,255,0.07) 0 1px, transparent 1px 7px);
+  }
+  /* Two extra specular passes at different speeds/angles from the main sheen */
+  .foil-spec {
+    position: absolute;
+    inset: -35%;
+    z-index: 4;
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+  .foil-spec-a {
+    background: linear-gradient(calc(var(--ma, 90deg) + 38deg),
+      transparent 40%, rgba(255,236,190,0.16) 48%, rgba(255,255,255,0.2) 50%,
+      rgba(190,220,255,0.15) 52%, transparent 60%);
+    background-size: 240% 240%;
+    animation: specDriftA calc(var(--dur-drift) * 1.8) ease-in-out infinite;
+  }
+  @keyframes specDriftA {
+    0%, 100% { background-position: 0% 20%; opacity: 0.5; }
+    50% { background-position: 100% 80%; opacity: 0.9; }
+  }
+  .foil-spec-b {
+    background:
+      radial-gradient(circle at calc(102% - var(--mx, 50%)) calc(104% - var(--my, 50%)),
+        rgba(150,205,255,0.22), transparent 36%),
+      radial-gradient(circle at calc(0% + var(--mx, 50%) * 0.6) calc(-4% + var(--my, 50%) * 0.6),
+        rgba(255,180,120,0.14), transparent 30%);
+    animation: specPulseB var(--dur-drift) ease-in-out infinite;
+  }
+  @keyframes specPulseB {
+    0%, 100% { opacity: 0.55; }
+    42% { opacity: 1; }
+  }
+
+  /* Thin holographic edge strips, top + bottom, slowly cycling */
+  .edge-holo {
+    position: absolute;
+    left: 12px; right: 12px;
+    height: 2px;
+    z-index: 6;
+    pointer-events: none;
+    border-radius: 2px;
+    opacity: 0.55;
+    background: linear-gradient(90deg,
+      rgba(255,110,145,0.9), rgba(255,205,110,0.9), rgba(150,255,185,0.9),
+      rgba(120,190,255,0.9), rgba(205,140,255,0.9), rgba(255,110,145,0.9));
+    background-size: 200% 100%;
+    animation: edgeCycle var(--dur-drift) linear infinite;
+  }
+  .edge-holo { top: 5px; }
+  @keyframes edgeCycle {
+    0% { background-position: 0% 0; }
+    100% { background-position: 200% 0; }
+  }
+  /* Embossed original corner brackets, like a card's wear-free corners */
+  .frame-corners { position: absolute; inset: 0; z-index: 6; pointer-events: none; }
+  .frame-corners i {
+    position: absolute;
+    width: 24px; height: 24px;
+    border: 2px solid var(--accent);
+    opacity: 0.45;
+  }
+  .frame-corners i:nth-child(1) { top: 7px; left: 7px; border-right: none; border-bottom: none; border-top-left-radius: 14px; }
+  .frame-corners i:nth-child(2) { top: 7px; right: 7px; border-left: none; border-bottom: none; border-top-right-radius: 14px; }
+  .frame-corners i:nth-child(3) { bottom: 7px; left: 7px; border-right: none; border-top: none; border-bottom-left-radius: 14px; }
+  .frame-corners i:nth-child(4) { bottom: 7px; right: 7px; border-left: none; border-top: none; border-bottom-right-radius: 14px; }
+
+  /* Rarity stamp: bottom-right, like a print-run marker on a chase card */
+  .rarity-stamp {
+    position: absolute;
+    right: 13px; bottom: 11px;
+    z-index: 6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    pointer-events: none;
+    opacity: 0.8;
+  }
+  .rs-gems { display: flex; gap: 5px; align-items: center; }
+  .rs-gems i {
+    width: 6px; height: 6px;
+    background: linear-gradient(135deg, #f0c766, #96731f);
+    transform: rotate(45deg);
+    box-shadow: 0 0 6px var(--glow-weak);
+    animation: gemGlint var(--dur-breathe) ease-in-out infinite;
+  }
+  .rs-gems i:nth-child(2) { width: 8px; height: 8px; animation-delay: -1.4s; }
+  .rs-gems i:nth-child(3) { animation-delay: -2.8s; }
+  @keyframes gemGlint {
+    0%, 100% { filter: brightness(1); transform: rotate(45deg) scale(1); }
+    50% { filter: brightness(1.55); transform: rotate(45deg) scale(1.18); }
+  }
+  .rs-text, .rs-num {
+    font-family: "IBM Plex Mono", monospace;
+    font-weight: 600;
+    font-size: 0.46rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    line-height: 1.2;
+  }
+  .rs-num { opacity: 0.65; letter-spacing: 0.12em; }
+
+  /* Featured pricing tier: real lift over the other two cards */
+  .price-card.featured {
+    transform: translateY(-5px) scale(1.01);
+    box-shadow:
+      0 20px 40px -20px rgba(240,199,102,0.4),
+      0 6px 16px -10px var(--shadow);
+    z-index: 1;
+  }
+  .price-card.featured:hover { transform: translateY(-8px) scale(1.01); }
+  /* Animated holo badge on the featured tier */
+  .holo-badge {
+    position: absolute;
+    top: -0.6rem; right: 0.9rem;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--on-accent);
+    border: 1px solid var(--accent-soft);
+    box-shadow: 0 3px 10px -4px var(--shadow);
+  }
+  .holo-badge::before {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    background: conic-gradient(
+      rgba(255,110,145,0.9), rgba(255,205,110,0.9), rgba(150,255,185,0.9),
+      rgba(120,190,255,0.9), rgba(205,140,255,0.9), rgba(255,110,145,0.9));
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
+            mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
+    animation: badgeSpin var(--dur-spin) linear infinite;
+  }
+  .holo-badge i {
+    width: 8px; height: 8px;
+    background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+    transform: rotate(45deg);
+    animation: gemGlint var(--dur-breathe) ease-in-out infinite;
+  }
+  @keyframes badgeSpin {
+    0% { transform: rotate(0deg); filter: hue-rotate(0deg); }
+    100% { transform: rotate(360deg); filter: hue-rotate(360deg); }
+  }
+
+  /* Full-screen flash at the pack reveal for a sharper "pull" moment */
+  #packIntro::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 50%, #fffaf0 0%, rgba(255,244,214,0.9) 45%, transparent 75%);
+    opacity: 0;
+    pointer-events: none;
+    animation: screenFlash 0.45s ease-out 1.46s forwards;
+  }
+  @keyframes screenFlash {
+    0% { opacity: 0; }
+    16% { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  /* Optional gyroscope-tilt chip (only appears where iOS asks permission) */
+  .tilt-chip {
+    position: fixed;
+    bottom: 4.7rem; left: 50%;
+    transform: translateX(-50%);
+    z-index: 6;
+    font-family: "IBM Plex Mono", monospace;
+    font-weight: 600;
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--surface);
+    border: 1px solid var(--accent-soft);
+    border-radius: 999px;
+    padding: 0.4rem 0.95rem;
+    cursor: pointer;
+    box-shadow: 0 10px 26px -14px var(--shadow);
+    animation: breatheScale var(--dur-breathe) ease-in-out infinite;
+  }
+  .tilt-chip[hidden] { display: none; }
+  .tilt-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Reduced motion: keep every layer legible but perfectly still */
+  @media (prefers-reduced-motion: reduce) {
+    .foil-idle, .foil-refract, .foil-spec-a, .foil-spec-b,
+    .edge-holo, .holo-badge::before, .holo-badge i,
+    .rs-gems i, .tilt-chip, .price-card.featured { animation: none !important; }
+    .glint, #packIntro::after { display: none !important; }
+  }
+
+</style>
+
+<div id="leonyxApp">
+    <div id="packIntro" aria-hidden="true">
+    <div class="pack-stage">
+      <div class="pack-ring"></div>
+      <div class="pack-face pack-top"><span>LEONYX</span><em>Holo Rare</em></div>
+      <i class="pack-shine"></i>
+      <div class="pack-face pack-bottom"><span>LEONYX</span><em>Holo Rare</em></div>
+      <div class="pack-tearline"></div>
+      <div class="pack-flash"></div>
+      <div class="pack-reveal">
+        <div class="reveal-card"><span class="reveal-word">LEONYX</span><span class="reveal-sub">AI That Works 24/7</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="deck" id="deck">
+    <div class="foil-idle" aria-hidden="true"></div>
+    <div class="foil-refract" aria-hidden="true"></div>
+    <div class="foil-spec foil-spec-a" aria-hidden="true"></div>
+    <div class="foil-spec foil-spec-b" aria-hidden="true"></div>
+    <div class="foil-sheen" id="foilSheen"></div>
+    <div class="edge-holo" aria-hidden="true"></div>
+    <div class="frame-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <div class="rarity-stamp" aria-hidden="true">
+      <span class="rs-gems"><i></i><i></i><i></i></span>
+      <span class="rs-text">Rare &middot; Holo Foil</span>
+      <span class="rs-num">No. 001 / 500</span>
+    </div>
+
+    <div class="slide active s-title">
+      <span class="event-badge" style="margin: 0 auto 1.4rem; display: table;">Northside TCG &middot; Aug 29&ndash;30</span>
+      <div class="wordmark">LEONYX</div>
+      <p class="tagline">AI That Works For Your Business, 24/7</p>
+      <div class="pill-row">
+        <span class="pill">AI Phone Agents</span>
+        <span class="pill">Website &amp; SEO</span>
+        <span class="pill">Booking Automation</span>
+        <span class="pill">Price Watch</span>
+        <span class="pill">No Subscription</span>
+      </div>
+      <p class="slide-sub" style="margin:0;">Swipe or tap the arrow below &rarr;</p>
+    </div>
+
+    <div class="slide">
+      <p class="mono-label slide-kicker">The Problem</p>
+      <div class="big-stat">62%</div>
+      <p class="slide-sub">of customers who reach voicemail <strong style="color:var(--ink)">don't call back</strong> &mdash; they book with whoever picks up next.</p>
+      <div class="cards">
+        <div class="card">
+          <div class="card-title">Missed calls = missed revenue</div>
+          <div class="card-body">Every time you're with a customer or away from the shop, your phone rings and nobody answers.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Manual booking wastes hours</div>
+          <div class="card-body">Back-and-forth texts and calls to confirm appointments &mdash; time you could spend serving customers.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">You're invisible on Google</div>
+          <div class="card-body">Directories and third-party sites outrank your own website for your own business name.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide">
+      <p class="mono-label slide-kicker">What We Build</p>
+      <h2 class="slide-title">Three products.<br><span>One clear goal.</span></h2>
+      <p class="slide-sub">Capture every customer you're currently losing &mdash; without hiring more staff.</p>
+      <div class="cards">
+        <div class="card">
+          <div class="card-title">AI Phone Receptionist</div>
+          <div class="card-body">Answers every call instantly, gives pricing &amp; hours, books appointments &mdash; 24/7.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Website &amp; SEO</div>
+          <div class="card-body">A fast site that ranks above directories and converts visitors into bookings.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Booking Automation</div>
+          <div class="card-body">Automated SMS reminders and confirmations. Cuts no-shows by up to 60%.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">AI Browser Automation</div>
+          <div class="card-body">Watches prices, auto-posts inventory, tracks competitors &mdash; 24/7 in the background.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide">
+      <p class="mono-label slide-kicker">Built For Shops Like Yours</p>
+      <h2 class="slide-title">A card shop's AI <span>does all of this</span></h2>
+      <p class="slide-sub">While you're at this table, your AI is back at the shop handling everything.</p>
+      <div class="cards">
+        <div class="card panel">
+          <span class="panel-tag">01</span>
+          <div>
+            <div class="card-title">&ldquo;What are you paying for a Charizard?&rdquo;</div>
+            <div class="card-body">Checks your live buylist and gives a real answer &mdash; no hold music, no missed opportunity.</div>
+          </div>
+        </div>
+        <div class="card panel">
+          <span class="panel-tag">02</span>
+          <div>
+            <div class="card-title">&ldquo;Do you take PSA grading submissions?&rdquo;</div>
+            <div class="card-body">Explains your grading service, intake process, and drop-off schedule &mdash; on your hours.</div>
+          </div>
+        </div>
+        <div class="card panel">
+          <span class="panel-tag">03</span>
+          <div>
+            <div class="card-title">&ldquo;I've got a collection I want to sell.&rdquo;</div>
+            <div class="card-body">Pre-screens sellers and books a valuation appointment before they call someone else.</div>
+          </div>
+        </div>
+        <div class="card panel">
+          <span class="panel-tag">04</span>
+          <div>
+            <div class="card-title">Price watch, handled while you sleep</div>
+            <div class="card-body">Tracks TCGPlayer &amp; eBay for price swings and auto-posts new arrivals to Instagram.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide">
+      <p class="mono-label slide-kicker">The Process</p>
+      <h2 class="slide-title">Up and running <span>in days, not months</span></h2>
+      <p class="slide-sub">We do the build. You keep running your business.</p>
+      <div class="steps">
+        <div class="step"><span class="step-num">1</span><div><div class="card-title">Free 15-min call</div><div class="card-body">We audit your setup and find what's costing you money right now.</div></div></div>
+        <div class="step"><span class="step-num">2</span><div><div class="card-title">We build it</div><div class="card-body">Custom AI trained on your business &mdash; services, pricing, hours, tone.</div></div></div>
+        <div class="step"><span class="step-num">3</span><div><div class="card-title">Go live</div><div class="card-body">We connect your number, test end-to-end, hand you something that works.</div></div></div>
+        <div class="step"><span class="step-num">4</span><div><div class="card-title">You own it</div><div class="card-body">No monthly fee, no lock-in. We train you and walk away.</div></div></div>
+      </div>
+    </div>
+
+    <div class="slide">
+      <p class="mono-label slide-kicker">Real Results</p>
+      <h2 class="slide-title">Already working for <span>local businesses</span></h2>
+      <div class="quote-block">
+        &ldquo;We had a full audit done on our website &mdash; it was unreachable for 90 seconds and ranking 9th for our own name. Leonyx built us an AI receptionist that answers every call, and we went live in under a week.&rdquo;
+        <span class="quote-source">&mdash; Barbershop owner, Mississauga &middot; 3 locations &middot; 4,400+ reviews</span>
+      </div>
+      <div class="stat-strip">
+        <div class="stat"><div class="stat-num">24/7</div><div class="stat-label">AI answers calls</div></div>
+        <div class="stat"><div class="stat-num">&lt;7 days</div><div class="stat-label">call to live</div></div>
+        <div class="stat"><div class="stat-num">$0/mo</div><div class="stat-label">no subscription</div></div>
+      </div>
+    </div>
+
+    <div class="slide">
+      <p class="mono-label slide-kicker">Pricing</p>
+      <h2 class="slide-title">Simple. <span>One-time. Yours.</span></h2>
+      <p class="slide-sub">No subscriptions, no hidden fees. You pay once, we build it, you own it.</p>
+      <div class="price-grid">
+        <div class="price-card">
+          <div class="price-row"><span class="price-tier">Starter</span><span class="price-amount">$997</span></div>
+          <ul class="price-feats">
+            <li>AI Phone Receptionist</li>
+            <li>Trained on your business</li>
+            <li>2-week support included</li>
+          </ul>
+        </div>
+        <div class="price-card featured">
+          <span class="holo-badge" aria-hidden="true"><i></i></span>
+          <div class="price-row"><span class="price-tier">Growth</span><span class="price-amount">$1,497</span></div>
+          <ul class="price-feats">
+            <li>Everything in Starter</li>
+            <li>Website redesign + SEO</li>
+            <li>Booking system integration</li>
+            <li>30-day support included</li>
+          </ul>
+        </div>
+        <div class="price-card">
+          <div class="price-row"><span class="price-tier">Full Stack</span><span class="price-amount">$1,997</span></div>
+          <ul class="price-feats">
+            <li>Everything in Growth</li>
+            <li>Automated booking reminders</li>
+            <li>Social media AI content</li>
+            <li>60-day priority support</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide s-cta">
+      <div class="confetti-layer" id="confettiLayer"></div>
+      <p class="mono-label slide-kicker">Let's Talk</p>
+      <div class="qr-frame" id="qrFrame"><svg viewBox="0 0 33 33" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" role="img" aria-label="QR code linking to this Leonyx booth page"><rect width="33" height="33" fill="#fffaf0"/><g fill="#211c14"><rect x="0" y="0" width="7" height="1"/><rect x="11" y="0" width="1" height="1"/><rect x="16" y="0" width="1" height="1"/><rect x="19" y="0" width="2" height="1"/><rect x="23" y="0" width="1" height="1"/><rect x="26" y="0" width="7" height="1"/><rect x="0" y="1" width="1" height="1"/><rect x="6" y="1" width="1" height="1"/><rect x="9" y="1" width="4" height="1"/><rect x="15" y="1" width="1" height="1"/><rect x="18" y="1" width="1" height="1"/><rect x="20" y="1" width="1" height="1"/><rect x="22" y="1" width="1" height="1"/><rect x="26" y="1" width="1" height="1"/><rect x="32" y="1" width="1" height="1"/><rect x="0" y="2" width="1" height="1"/><rect x="2" y="2" width="3" height="1"/><rect x="6" y="2" width="1" height="1"/><rect x="8" y="2" width="1" height="1"/><rect x="12" y="2" width="1" height="1"/><rect x="14" y="2" width="3" height="1"/><rect x="21" y="2" width="2" height="1"/><rect x="26" y="2" width="1" height="1"/><rect x="28" y="2" width="3" height="1"/><rect x="32" y="2" width="1" height="1"/><rect x="0" y="3" width="1" height="1"/><rect x="2" y="3" width="3" height="1"/><rect x="6" y="3" width="1" height="1"/><rect x="8" y="3" width="2" height="1"/><rect x="15" y="3" width="1" height="1"/><rect x="18" y="3" width="1" height="1"/><rect x="22" y="3" width="1" height="1"/><rect x="24" y="3" width="1" height="1"/><rect x="26" y="3" width="1" height="1"/><rect x="28" y="3" width="3" height="1"/><rect x="32" y="3" width="1" height="1"/><rect x="0" y="4" width="1" height="1"/><rect x="2" y="4" width="3" height="1"/><rect x="6" y="4" width="1" height="1"/><rect x="8" y="4" width="1" height="1"/><rect x="10" y="4" width="1" height="1"/><rect x="12" y="4" width="6" height="1"/><rect x="20" y="4" width="2" height="1"/><rect x="23" y="4" width="1" height="1"/><rect x="26" y="4" width="1" height="1"/><rect x="28" y="4" width="3" height="1"/><rect x="32" y="4" width="1" height="1"/><rect x="0" y="5" width="1" height="1"/><rect x="6" y="5" width="1" height="1"/><rect x="8" y="5" width="3" height="1"/><rect x="18" y="5" width="2" height="1"/><rect x="21" y="5" width="2" height="1"/><rect x="24" y="5" width="1" height="1"/><rect x="26" y="5" width="1" height="1"/><rect x="32" y="5" width="1" height="1"/><rect x="0" y="6" width="7" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/><rect x="12" y="6" width="1" height="1"/><rect x="14" y="6" width="1" height="1"/><rect x="16" y="6" width="1" height="1"/><rect x="18" y="6" width="1" height="1"/><rect x="20" y="6" width="1" height="1"/><rect x="22" y="6" width="1" height="1"/><rect x="24" y="6" width="1" height="1"/><rect x="26" y="6" width="7" height="1"/><rect x="8" y="7" width="1" height="1"/><rect x="16" y="7" width="1" height="1"/><rect x="19" y="7" width="3" height="1"/><rect x="23" y="7" width="2" height="1"/><rect x="0" y="8" width="1" height="1"/><rect x="2" y="8" width="5" height="1"/><rect x="9" y="8" width="1" height="1"/><rect x="12" y="8" width="3" height="1"/><rect x="16" y="8" width="2" height="1"/><rect x="19" y="8" width="1" height="1"/><rect x="24" y="8" width="1" height="1"/><rect x="26" y="8" width="5" height="1"/><rect x="0" y="9" width="2" height="1"/><rect x="3" y="9" width="2" height="1"/><rect x="7" y="9" width="2" height="1"/><rect x="13" y="9" width="2" height="1"/><rect x="16" y="9" width="5" height="1"/><rect x="23" y="9" width="1" height="1"/><rect x="26" y="9" width="2" height="1"/><rect x="29" y="9" width="2" height="1"/><rect x="32" y="9" width="1" height="1"/><rect x="0" y="10" width="1" height="1"/><rect x="3" y="10" width="4" height="1"/><rect x="8" y="10" width="2" height="1"/><rect x="11" y="10" width="7" height="1"/><rect x="22" y="10" width="1" height="1"/><rect x="24" y="10" width="3" height="1"/><rect x="28" y="10" width="1" height="1"/><rect x="30" y="10" width="2" height="1"/><rect x="0" y="11" width="2" height="1"/><rect x="3" y="11" width="1" height="1"/><rect x="5" y="11" width="1" height="1"/><rect x="7" y="11" width="2" height="1"/><rect x="10" y="11" width="2" height="1"/><rect x="13" y="11" width="1" height="1"/><rect x="15" y="11" width="1" height="1"/><rect x="17" y="11" width="2" height="1"/><rect x="20" y="11" width="3" height="1"/><rect x="24" y="11" width="3" height="1"/><rect x="28" y="11" width="3" height="1"/><rect x="32" y="11" width="1" height="1"/><rect x="2" y="12" width="3" height="1"/><rect x="6" y="12" width="1" height="1"/><rect x="9" y="12" width="1" height="1"/><rect x="14" y="12" width="1" height="1"/><rect x="16" y="12" width="1" height="1"/><rect x="20" y="12" width="1" height="1"/><rect x="22" y="12" width="4" height="1"/><rect x="27" y="12" width="3" height="1"/><rect x="31" y="12" width="2" height="1"/><rect x="1" y="13" width="2" height="1"/><rect x="8" y="13" width="2" height="1"/><rect x="11" y="13" width="3" height="1"/><rect x="15" y="13" width="1" height="1"/><rect x="17" y="13" width="2" height="1"/><rect x="22" y="13" width="2" height="1"/><rect x="26" y="13" width="1" height="1"/><rect x="31" y="13" width="2" height="1"/><rect x="0" y="14" width="1" height="1"/><rect x="5" y="14" width="2" height="1"/><rect x="14" y="14" width="4" height="1"/><rect x="20" y="14" width="3" height="1"/><rect x="25" y="14" width="2" height="1"/><rect x="29" y="14" width="3" height="1"/><rect x="0" y="15" width="1" height="1"/><rect x="5" y="15" width="1" height="1"/><rect x="12" y="15" width="2" height="1"/><rect x="15" y="15" width="1" height="1"/><rect x="18" y="15" width="1" height="1"/><rect x="21" y="15" width="2" height="1"/><rect x="25" y="15" width="2" height="1"/><rect x="29" y="15" width="2" height="1"/><rect x="0" y="16" width="1" height="1"/><rect x="2" y="16" width="2" height="1"/><rect x="6" y="16" width="1" height="1"/><rect x="8" y="16" width="2" height="1"/><rect x="13" y="16" width="3" height="1"/><rect x="17" y="16" width="1" height="1"/><rect x="20" y="16" width="1" height="1"/><rect x="22" y="16" width="4" height="1"/><rect x="27" y="16" width="2" height="1"/><rect x="32" y="16" width="1" height="1"/><rect x="1" y="17" width="2" height="1"/><rect x="7" y="17" width="2" height="1"/><rect x="13" y="17" width="2" height="1"/><rect x="16" y="17" width="1" height="1"/><rect x="18" y="17" width="4" height="1"/><rect x="23" y="17" width="1" height="1"/><rect x="25" y="17" width="3" height="1"/><rect x="29" y="17" width="2" height="1"/><rect x="32" y="17" width="1" height="1"/><rect x="0" y="18" width="3" height="1"/><rect x="4" y="18" width="3" height="1"/><rect x="9" y="18" width="2" height="1"/><rect x="12" y="18" width="1" height="1"/><rect x="15" y="18" width="2" height="1"/><rect x="18" y="18" width="1" height="1"/><rect x="20" y="18" width="3" height="1"/><rect x="25" y="18" width="4" height="1"/><rect x="30" y="18" width="1" height="1"/><rect x="0" y="19" width="3" height="1"/><rect x="4" y="19" width="1" height="1"/><rect x="9" y="19" width="2" height="1"/><rect x="13" y="19" width="1" height="1"/><rect x="16" y="19" width="1" height="1"/><rect x="21" y="19" width="1" height="1"/><rect x="23" y="19" width="2" height="1"/><rect x="26" y="19" width="5" height="1"/><rect x="32" y="19" width="1" height="1"/><rect x="0" y="20" width="1" height="1"/><rect x="3" y="20" width="1" height="1"/><rect x="6" y="20" width="2" height="1"/><rect x="9" y="20" width="2" height="1"/><rect x="13" y="20" width="3" height="1"/><rect x="18" y="20" width="1" height="1"/><rect x="22" y="20" width="1" height="1"/><rect x="24" y="20" width="2" height="1"/><rect x="27" y="20" width="3" height="1"/><rect x="0" y="21" width="1" height="1"/><rect x="2" y="21" width="1" height="1"/><rect x="4" y="21" width="1" height="1"/><rect x="11" y="21" width="1" height="1"/><rect x="15" y="21" width="2" height="1"/><rect x="20" y="21" width="2" height="1"/><rect x="23" y="21" width="4" height="1"/><rect x="29" y="21" width="1" height="1"/><rect x="32" y="21" width="1" height="1"/><rect x="0" y="22" width="1" height="1"/><rect x="3" y="22" width="1" height="1"/><rect x="5" y="22" width="3" height="1"/><rect x="13" y="22" width="1" height="1"/><rect x="19" y="22" width="1" height="1"/><rect x="21" y="22" width="1" height="1"/><rect x="24" y="22" width="1" height="1"/><rect x="27" y="22" width="1" height="1"/><rect x="29" y="22" width="1" height="1"/><rect x="31" y="22" width="1" height="1"/><rect x="0" y="23" width="1" height="1"/><rect x="2" y="23" width="4" height="1"/><rect x="7" y="23" width="1" height="1"/><rect x="9" y="23" width="1" height="1"/><rect x="12" y="23" width="3" height="1"/><rect x="16" y="23" width="1" height="1"/><rect x="19" y="23" width="4" height="1"/><rect x="24" y="23" width="1" height="1"/><rect x="26" y="23" width="1" height="1"/><rect x="28" y="23" width="1" height="1"/><rect x="30" y="23" width="2" height="1"/><rect x="0" y="24" width="1" height="1"/><rect x="3" y="24" width="4" height="1"/><rect x="9" y="24" width="1" height="1"/><rect x="14" y="24" width="1" height="1"/><rect x="17" y="24" width="1" height="1"/><rect x="19" y="24" width="1" height="1"/><rect x="22" y="24" width="7" height="1"/><rect x="8" y="25" width="1" height="1"/><rect x="10" y="25" width="2" height="1"/><rect x="14" y="25" width="1" height="1"/><rect x="16" y="25" width="5" height="1"/><rect x="23" y="25" width="2" height="1"/><rect x="28" y="25" width="1" height="1"/><rect x="30" y="25" width="1" height="1"/><rect x="32" y="25" width="1" height="1"/><rect x="0" y="26" width="7" height="1"/><rect x="10" y="26" width="6" height="1"/><rect x="17" y="26" width="1" height="1"/><rect x="21" y="26" width="1" height="1"/><rect x="23" y="26" width="2" height="1"/><rect x="26" y="26" width="1" height="1"/><rect x="28" y="26" width="1" height="1"/><rect x="30" y="26" width="2" height="1"/><rect x="0" y="27" width="1" height="1"/><rect x="6" y="27" width="1" height="1"/><rect x="8" y="27" width="2" height="1"/><rect x="11" y="27" width="3" height="1"/><rect x="16" y="27" width="4" height="1"/><rect x="21" y="27" width="1" height="1"/><rect x="23" y="27" width="2" height="1"/><rect x="28" y="27" width="4" height="1"/><rect x="0" y="28" width="1" height="1"/><rect x="2" y="28" width="3" height="1"/><rect x="6" y="28" width="1" height="1"/><rect x="8" y="28" width="1" height="1"/><rect x="13" y="28" width="1" height="1"/><rect x="16" y="28" width="1" height="1"/><rect x="24" y="28" width="6" height="1"/><rect x="31" y="28" width="1" height="1"/><rect x="0" y="29" width="1" height="1"/><rect x="2" y="29" width="3" height="1"/><rect x="6" y="29" width="1" height="1"/><rect x="8" y="29" width="2" height="1"/><rect x="11" y="29" width="1" height="1"/><rect x="14" y="29" width="2" height="1"/><rect x="17" y="29" width="2" height="1"/><rect x="23" y="29" width="3" height="1"/><rect x="28" y="29" width="2" height="1"/><rect x="31" y="29" width="2" height="1"/><rect x="0" y="30" width="1" height="1"/><rect x="2" y="30" width="3" height="1"/><rect x="6" y="30" width="1" height="1"/><rect x="8" y="30" width="1" height="1"/><rect x="10" y="30" width="3" height="1"/><rect x="15" y="30" width="2" height="1"/><rect x="18" y="30" width="1" height="1"/><rect x="20" y="30" width="3" height="1"/><rect x="24" y="30" width="1" height="1"/><rect x="26" y="30" width="2" height="1"/><rect x="29" y="30" width="1" height="1"/><rect x="0" y="31" width="1" height="1"/><rect x="6" y="31" width="1" height="1"/><rect x="11" y="31" width="1" height="1"/><rect x="15" y="31" width="1" height="1"/><rect x="18" y="31" width="4" height="1"/><rect x="23" y="31" width="1" height="1"/><rect x="26" y="31" width="1" height="1"/><rect x="28" y="31" width="3" height="1"/><rect x="0" y="32" width="7" height="1"/><rect x="8" y="32" width="1" height="1"/><rect x="10" y="32" width="3" height="1"/><rect x="14" y="32" width="2" height="1"/><rect x="17" y="32" width="3" height="1"/><rect x="22" y="32" width="4" height="1"/><rect x="27" y="32" width="1" height="1"/><rect x="31" y="32" width="1" height="1"/></g></svg></div>
+      <h2 class="slide-title" style="margin-bottom:0.3rem;">Scan to see this again<br><span>&amp; book a free call</span></h2>
+      <p class="slide-sub">leonyx-ai.com &middot; Mississauga, ON</p>
+
+      <div class="cta-row">
+        <a class="btn btn-primary" href="https://calendly.com/laithnasrallah/30min" target="_blank" rel="noopener">Book a Free 15-Min Call</a>
+        <button class="btn btn-ghost" id="showFormBtn" type="button">Leave Your Info Instead</button>
+      </div>
+
+      <div id="formWrap" class="signup-form" hidden>
+        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScRVo6EsdXJviLfZI07AiQTeMkGuw15sYPlUrvh2YiJUULKVA/viewform?embedded=true" width="100%" height="480" frameborder="0" marginheight="0" marginwidth="0" title="Leonyx sign-up form">Loading&hellip;</iframe>
+      </div>
+
+      <p class="team-link"><a class="linklike" href="https://docs.google.com/spreadsheets/d/1RipV6__DbudmGLbHl_0f4LtZOPJyMIJWlwidCQ4THmU/edit?usp=sharing" target="_blank" rel="noopener">Team view (sign-ups)</a></p>
+    </div>
+
+  </div>
+
+  <div class="nav">
+    <button id="prevBtn" type="button" aria-label="Previous slide">&larr;</button>
+    <div class="dots" id="dots"></div>
+    <div class="counter" id="counter">1 / 8</div>
+    <button id="nextBtn" type="button" aria-label="Next slide">&rarr;</button>
+  </div>
+  <button id="tiltBtn" class="tilt-chip" type="button" hidden>&#10022; Enable Tilt</button>
+</div>
+
+<script>
+  (function () {
+    var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+    var dotsEl = document.getElementById('dots');
+    var counterEl = document.getElementById('counter');
+    var prevBtn = document.getElementById('prevBtn');
+    var nextBtn = document.getElementById('nextBtn');
+    var deck = document.getElementById('deck');
+    var foilSheen = document.getElementById('foilSheen');
+    var packIntro = document.getElementById('packIntro');
+    var qrFrame = document.getElementById('qrFrame');
+    var current = 0;
+    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var ctaCelebrated = false;
+
+    function buzz(ms) {
+      if (reduceMotion || !navigator.vibrate) return;
+      try { navigator.vibrate(ms); } catch (err) {}
+    }
+
+    /* ---------- pack-opening intro (once per visitor session) ---------- */
+    if (packIntro) {
+      var seenPack = false;
+      try { seenPack = sessionStorage.getItem('leonyxPackSeen') === '1'; } catch (err) {}
+      if (reduceMotion || seenPack) {
+        packIntro.remove();
+        packIntro = null;
+      } else {
+        try { sessionStorage.setItem('leonyxPackSeen', '1'); } catch (err) {}
+        var killPack = function () {
+          if (!packIntro) return;
+          packIntro.removeEventListener('click', killPack);
+          packIntro.remove();
+          packIntro = null;
+        };
+        packIntro.addEventListener('click', killPack);
+        setTimeout(killPack, 3000);
+      }
+    }
+
+    /* ---------- pointer-driven foil + 3D tilt (rAF-smoothed) ---------- */
+    var cur = { rx: 0, ry: 0, s: 1, so: 0, ma: 90 };
+    var tgt = { rx: 0, ry: 0, s: 1, so: 0, ma: 90 };
+    var nudgeDir = 0, nudgeStart = 0;
+    var rafId = null;
+    var lastGlint = 0;
+    var glintCount = 0;
+
+    function setVars() {
+      deck.style.setProperty('--rx', cur.rx.toFixed(2) + 'deg');
+      deck.style.setProperty('--ry', cur.ry.toFixed(2) + 'deg');
+      deck.style.setProperty('--ds', cur.s.toFixed(3));
+      deck.style.setProperty('--nudge', nudgeVal().toFixed(2) + 'deg');
+      foilSheen.style.setProperty('--sheen-opacity', cur.so.toFixed(2));
+      foilSheen.style.setProperty('--ma', cur.ma.toFixed(1) + 'deg');
+    }
+
+    function nudgeVal() {
+      if (!nudgeDir) return 0;
+      var t = (performance.now() - nudgeStart) / 340;
+      if (t >= 1) { nudgeDir = 0; return 0; }
+      return Math.sin(Math.PI * t) * 4.5 * nudgeDir;
+    }
+
+    function loop() {
+      rafId = null;
+      var k = 0.16;
+      var settled = true;
+      ['rx', 'ry', 's', 'so', 'ma'].forEach(function (key) {
+        var t = tgt[key];
+        if (key === 'rx') t += gyro.ax || 0;
+        if (key === 'ry') t += gyro.ay || 0;
+        var d = t - cur[key];
+        if (Math.abs(d) > (key === 's' ? 0.001 : 0.01)) {
+          cur[key] += d * k;
+          settled = false;
+        } else {
+          cur[key] = tgt[key];
+        }
+      });
+      if (nudgeDir || !settled) {
+        setVars();
+        rafId = requestAnimationFrame(loop);
+      } else {
+        setVars();
+      }
+    }
+
+    function kick() { if (!rafId) rafId = requestAnimationFrame(loop); }
+
+    function spawnGlint(x, y) {
+      if (glintCount > 14) return;
+      glintCount++;
+      var g = document.createElement('span');
+      g.className = 'glint';
+      g.style.left = x + 'px';
+      g.style.top = y + 'px';
+      g.style.setProperty('--gs', (5 + Math.random() * 7).toFixed(1) + 'px');
+      g.addEventListener('animationend', function () { g.remove(); glintCount--; });
+      deck.appendChild(g);
+    }
+
+    if (!reduceMotion && deck && foilSheen) {
+      deck.addEventListener('pointermove', function (e) {
+        var r = deck.getBoundingClientRect();
+        var px = ((e.clientX - r.left) / r.width) * 100;
+        var py = ((e.clientY - r.top) / r.height) * 100;
+        tgt.rx = ((px - 50) / 50) * 7;
+        tgt.ry = (-(py - 50) / 50) * 7;
+        tgt.s = 1.015;
+        tgt.ma = 90 + (px - 50) * 1.6;
+        tgt.so = 0.9;
+        deck.style.setProperty('--mx', px.toFixed(1) + '%');
+        deck.style.setProperty('--my', py.toFixed(1) + '%');
+        var now = performance.now();
+        if (now - lastGlint > 80 && Math.random() < 0.6) {
+          lastGlint = now;
+          spawnGlint(e.clientX - r.left, e.clientY - r.top);
+        }
+        kick();
+      });
+      var settleDeck = function () {
+        tgt.rx = 0; tgt.ry = 0; tgt.s = 1; tgt.so = 0; tgt.ma = 90;
+        kick();
+      };
+      deck.addEventListener('pointerleave', settleDeck);
+      deck.addEventListener('pointercancel', settleDeck);
+    }
+
+    /* QR sheen follows the pointer too */
+    if (!reduceMotion && qrFrame) {
+      qrFrame.addEventListener('pointermove', function (e) {
+        var r = qrFrame.getBoundingClientRect();
+        qrFrame.style.setProperty('--qx', (((e.clientX - r.left) / r.width) * 100).toFixed(1) + '%');
+        qrFrame.style.setProperty('--qy', (((e.clientY - r.top) / r.height) * 100).toFixed(1) + '%');
+        qrFrame.style.setProperty('--qr-sheen', '0.8');
+      });
+      qrFrame.addEventListener('pointerleave', function () {
+        qrFrame.style.setProperty('--qr-sheen', '0');
+      });
+    }
+
+    /* ---------- gyroscope tilt (graceful no-op; iOS asks only from this tap) ---------- */
+    var gyro = { ax: 0, ay: 0, listening: false };
+    var tiltBtn = document.getElementById('tiltBtn');
+    function onDeviceOrientation(e) {
+      if (e.beta == null && e.gamma == null) return;
+      gyro.listening = true;
+      var g = Math.max(-35, Math.min(35, e.gamma || 0));
+      var b = Math.max(-35, Math.min(35, (e.beta == null ? 45 : e.beta) - 42));
+      gyro.ay = (g / 35) * 5.5;   /* left/right tilt -> rotateY */
+      gyro.ax = (b / 35) * 4.5;   /* top/bottom tilt -> rotateX */
+      kick();
+    }
+    function attachGyro() {
+      if (reduceMotion || gyro.listening) return;
+      window.addEventListener('deviceorientation', onDeviceOrientation);
+    }
+    if (!reduceMotion && typeof window.DeviceOrientationEvent !== 'undefined') {
+      var DOE = window.DeviceOrientationEvent;
+      if (tiltBtn && typeof DOE.requestPermission === 'function') {
+        var tiltDismissed = false;
+        try { tiltDismissed = sessionStorage.getItem('leonyxTiltDismissed') === '1'; } catch (err) {}
+        if (!tiltDismissed) {
+          setTimeout(function () { if (tiltBtn && !gyro.listening) tiltBtn.hidden = false; }, 3400);
+        }
+        tiltBtn.addEventListener('click', function () {
+          tiltBtn.hidden = true;
+          try { sessionStorage.setItem('leonyxTiltDismissed', '1'); } catch (err) {}
+          DOE.requestPermission().then(function (state) {
+            if (state === 'granted') attachGyro();
+          }).catch(function () {});
+        });
+      } else {
+        /* Android and other browsers: no permission gate needed */
+        if (tiltBtn) tiltBtn.remove();
+        attachGyro();
+      }
+    } else if (tiltBtn) {
+      tiltBtn.remove();
+    }
+
+    /* ---------- ambient life: occasional sparkle drifts even when idle ---------- */
+    if (!reduceMotion) {
+      setInterval(function () {
+        if (document.hidden || Math.random() < 0.3) return;
+        spawnGlint(deck.offsetWidth * (0.08 + Math.random() * 0.84),
+                   deck.offsetHeight * (0.08 + Math.random() * 0.84));
+      }, 1400);
+    }
+
+    /* ---------- confetti (3D tumbling shards) ---------- */
+    function burstConfetti(count) {
+      if (reduceMotion) return;
+      var layer = document.getElementById('confettiLayer');
+      if (!layer) return;
+      var colors = ['#f0c766', '#d4a94a', '#96731f', '#fffaf0', '#ff8fb3', '#8ec5ff'];
+      var n = count || 26;
+      for (var i = 0; i < n; i++) {
+        var shard = document.createElement('span');
+        shard.className = 'confetti-shard';
+        var angle = Math.random() * Math.PI * 2;
+        var dist = 60 + Math.random() * 90;
+        shard.style.setProperty('--dx', (Math.cos(angle) * dist).toFixed(0) + 'px');
+        shard.style.setProperty('--dy', (Math.sin(angle) * dist - 30).toFixed(0) + 'px');
+        shard.style.setProperty('--spin', ((Math.random() < 0.5 ? -1 : 1) * (360 + Math.random() * 720)).toFixed(0) + 'deg');
+        shard.style.setProperty('--ax', Math.random().toFixed(2));
+        shard.style.setProperty('--ay', Math.random().toFixed(2));
+        shard.style.setProperty('--cw', (4 + Math.random() * 6).toFixed(1) + 'px');
+        shard.style.setProperty('--ch', (6 + Math.random() * 8).toFixed(1) + 'px');
+        shard.style.left = (45 + Math.random() * 10) + '%';
+        shard.style.background = colors[i % colors.length];
+        shard.style.animationDelay = (Math.random() * 0.12).toFixed(2) + 's';
+        layer.appendChild(shard);
+        (function (el) {
+          setTimeout(function () { el.remove(); }, 1100);
+        })(shard);
+      }
+    }
+
+    /* ---------- slide navigation ---------- */
+    slides.forEach(function (_, i) {
+      var d = document.createElement('span');
+      d.className = 'dot' + (i === 0 ? ' active' : '');
+      d.setAttribute('role', 'button');
+      d.setAttribute('tabindex', '-1');
+      d.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+      dotsEl.appendChild(d);
+    });
+    var dots = Array.prototype.slice.call(dotsEl.children);
+
+    function render(dir) {
+      slides.forEach(function (s, i) {
+        var active = i === current;
+        s.classList.remove('enter-next', 'enter-prev');
+        s.classList.toggle('active', active);
+        if (active && dir && !reduceMotion) {
+          void s.offsetWidth;
+          s.classList.add(dir > 0 ? 'enter-next' : 'enter-prev');
+        }
+      });
+      dots.forEach(function (d, i) { d.classList.toggle('active', i === current); });
+      counterEl.textContent = (current + 1) + ' / ' + slides.length;
+      if (!reduceMotion) {
+        counterEl.classList.remove('tick');
+        void counterEl.offsetWidth;
+        counterEl.classList.add('tick');
+      }
+      prevBtn.disabled = current === 0;
+      nextBtn.disabled = current === slides.length - 1;
+
+      /* one-time celebration on reaching the CTA slide */
+      if (current === slides.length - 1 && !ctaCelebrated && !reduceMotion) {
+        ctaCelebrated = true;
+        setTimeout(function () {
+          burstConfetti(18);
+          buzz([12, 40, 12]);
+          if (qrFrame) {
+            qrFrame.classList.add('qr-pop');
+            setTimeout(function () { qrFrame.classList.remove('qr-pop'); }, 520);
+          }
+        }, 300);
+      }
+    }
+
+    function go(delta) {
+      if (!delta) return;
+      var next = Math.max(0, Math.min(slides.length - 1, current + delta));
+      if (next === current) return;
+      current = next;
+      render(delta);
+      if (!reduceMotion) {
+        nudgeDir = delta > 0 ? 1 : -1;
+        nudgeStart = performance.now();
+        kick();
+      }
+      buzz(6);
+    }
+
+    function goTo(i) {
+      var clamped = Math.max(0, Math.min(slides.length - 1, i));
+      go(clamped - current);
+    }
+
+    prevBtn.addEventListener('click', function () { go(-1); });
+    nextBtn.addEventListener('click', function () { go(1); });
+    dots.forEach(function (d, i) {
+      d.addEventListener('click', function () { goTo(i); });
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight') go(1);
+      if (e.key === 'ArrowLeft') go(-1);
+    });
+
+    var touchStartX = null;
+    deck.addEventListener('touchstart', function (e) { touchStartX = e.touches[0].clientX; }, { passive: true });
+    deck.addEventListener('touchend', function (e) {
+      if (touchStartX === null) return;
+      var dx = e.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1);
+      touchStartX = null;
+    }, { passive: true });
+
+    render();
+
+    /* ---------- click ripple on buttons & nav ---------- */
+    document.addEventListener('click', function (e) {
+      if (reduceMotion) return;
+      var t = e.target.closest ? e.target.closest('.btn, .nav button') : null;
+      if (!t || t.disabled) return;
+      var rect = t.getBoundingClientRect();
+      var size = Math.max(rect.width, rect.height) * 2.2;
+      var rip = document.createElement('span');
+      rip.className = 'ripple';
+      rip.style.width = rip.style.height = size + 'px';
+      rip.style.left = (e.clientX - rect.left) + 'px';
+      rip.style.top = (e.clientY - rect.top) + 'px';
+      t.appendChild(rip);
+      rip.addEventListener('animationend', function () { rip.remove(); });
+      buzz(t.classList.contains('btn-primary') ? [10, 30, 10] : 8);
+    });
+
+    /* ---------- lead capture (embedded Google Form) ---------- */
+    var showFormBtn = document.getElementById('showFormBtn');
+    var formWrap = document.getElementById('formWrap');
+
+    showFormBtn.addEventListener('click', function () {
+      formWrap.hidden = !formWrap.hidden;
+      showFormBtn.textContent = formWrap.hidden ? 'Leave Your Info Instead' : 'Hide Form';
+      if (!formWrap.hidden) {
+        formWrap.classList.remove('pop-in');
+        void formWrap.offsetWidth;
+        formWrap.classList.add('pop-in');
+        buzz(8);
+      }
+    });
+  })();
+</script>
