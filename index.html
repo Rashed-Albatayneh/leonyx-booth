@@ -1263,9 +1263,23 @@
         <button class="btn btn-ghost" id="showFormBtn" type="button">Leave Your Info Instead</button>
       </div>
 
-      <div id="formWrap" class="signup-form" hidden>
-        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScRVo6EsdXJviLfZI07AiQTeMkGuw15sYPlUrvh2YiJUULKVA/viewform?embedded=true" width="100%" height="480" frameborder="0" marginheight="0" marginwidth="0" title="Leonyx sign-up form">Loading&hellip;</iframe>
-      </div>
+      <form id="signupForm" class="signup-form" hidden>
+        <div>
+          <label for="fName">Your name</label>
+          <input id="fName" name="fName" type="text" autocomplete="name" required>
+        </div>
+        <div>
+          <label for="fShop">Shop / business (optional)</label>
+          <input id="fShop" name="fShop" type="text" autocomplete="organization">
+        </div>
+        <div>
+          <label for="fContact">Phone or email</label>
+          <input id="fContact" name="fContact" type="text" autocomplete="tel" required>
+        </div>
+        <button class="btn btn-primary" type="submit">Submit</button>
+        <p class="signup-note">We'll follow up after the show. No spam.</p>
+      </form>
+      <p class="thanks" id="thanksMsg" hidden>Thanks &mdash; we'll be in touch after the show.</p>
 
       <p class="team-link"><a class="linklike" href="https://docs.google.com/spreadsheets/d/1RipV6__DbudmGLbHl_0f4LtZOPJyMIJWlwidCQ4THmU/edit?usp=sharing" target="_blank" rel="noopener">Team view (sign-ups)</a></p>
     </div>
@@ -1603,19 +1617,63 @@
       buzz(t.classList.contains('btn-primary') ? [10, 30, 10] : 8);
     });
 
-    /* ---------- lead capture (embedded Google Form) ---------- */
+    /* ---------- lead capture (own styled form, submits to Google Form's
+       response endpoint in the background so visitors never see Google's UI
+       or leave the page) ---------- */
     var showFormBtn = document.getElementById('showFormBtn');
-    var formWrap = document.getElementById('formWrap');
+    var signupForm = document.getElementById('signupForm');
+    var thanksMsg = document.getElementById('thanksMsg');
+
+    var GFORM_ACTION = 'https://docs.google.com/forms/d/e/1FAIpQLScRVo6EsdXJviLfZI07AiQTeMkGuw15sYPlUrvh2YiJUULKVA/formResponse';
+    var GFORM_FIELDS = {
+      name: 'entry.2115807684',
+      shop: 'entry.1391559499',
+      contact: 'entry.1419862675'
+    };
 
     showFormBtn.addEventListener('click', function () {
-      formWrap.hidden = !formWrap.hidden;
-      showFormBtn.textContent = formWrap.hidden ? 'Leave Your Info Instead' : 'Hide Form';
-      if (!formWrap.hidden) {
-        formWrap.classList.remove('pop-in');
-        void formWrap.offsetWidth;
-        formWrap.classList.add('pop-in');
+      signupForm.hidden = !signupForm.hidden;
+      showFormBtn.textContent = signupForm.hidden ? 'Leave Your Info Instead' : 'Hide Form';
+      if (!signupForm.hidden) {
+        signupForm.classList.remove('pop-in');
+        void signupForm.offsetWidth;
+        signupForm.classList.add('pop-in');
         buzz(8);
       }
+    });
+
+    signupForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var nameInput = document.getElementById('fName');
+      var contactInput = document.getElementById('fContact');
+      var name = nameInput.value.trim();
+      var shop = document.getElementById('fShop').value.trim();
+      var contact = contactInput.value.trim();
+      [nameInput, contactInput].forEach(function (inp) { inp.classList.remove('shake'); });
+      var missing = false;
+      if (!name) { void nameInput.offsetWidth; nameInput.classList.add('shake'); missing = true; }
+      if (!contact) { void contactInput.offsetWidth; contactInput.classList.add('shake'); missing = true; }
+      if (missing) { buzz([20, 40, 20]); return; }
+
+      var body = new URLSearchParams();
+      body.set(GFORM_FIELDS.name, name);
+      body.set(GFORM_FIELDS.shop, shop);
+      body.set(GFORM_FIELDS.contact, contact);
+      /* no-cors: the response is opaque and unreadable, which is expected —
+         Google Forms doesn't send CORS headers, so we can't inspect success,
+         only fire-and-forget. The optimistic local UI below is what the
+         visitor actually sees. */
+      fetch(GFORM_ACTION, { method: 'POST', mode: 'no-cors', body: body }).catch(function () {});
+
+      signupForm.reset();
+      signupForm.hidden = true;
+      showFormBtn.hidden = true;
+      thanksMsg.hidden = false;
+      thanksMsg.classList.remove('pop-in');
+      void thanksMsg.offsetWidth;
+      thanksMsg.classList.add('pop-in');
+      buzz([12, 40, 12]);
+      burstConfetti(30);
     });
   })();
 </script>
