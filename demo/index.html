@@ -1162,7 +1162,7 @@
       '',
       'PSA INTAKE SCRIPT: we accept PSA drop-offs at the counter. We inspect, photograph, and submit weekly on Tuesdays. Value tier $15/card (declared value up to $199, ~45 business days), Regular tier $25/card (up to $499). Insurance included. Payment due at drop-off.',
       'DROP-OFF SCHEDULE: buylist drop-offs Mon-Sat 10am-6pm, no appointment needed. Card valuations are BY APPOINTMENT.',
-      'VALUATION APPOINTMENTS: next open slot is ' + nextOpenSlotLabel() + '. When a seller sounds ready to sell a collection or asks for a valuation, offer that slot and, if they agree, confirm it as booked.',
+      'VALUATION APPOINTMENTS: next open slot is ' + nextOpenSlotLabel() + '. When a seller sounds ready to sell a collection or asks for a valuation, offer that slot and, if they agree, confirm it as booked. Emit that token ONLY after the caller has explicitly agreed in their most recent message - never in your offer itself.',
       'Reminder: all of this describes a fictional shop; never claim to be a real business or give legal advice.'
     ].join('\n');
   }
@@ -1335,13 +1335,15 @@
   }
 
   function finishLive(bubble, userText) {
-    var finalText = bubble.body.textContent;
+    var raw = bubble.body.textContent;
+    var booked = /BOOKED/i.test(raw);
+    var finalText = raw.replace(/\s*BOOKED:?\s*/gi, ' ').replace(/\s{2,}/g, ' ').trim();
+    bubble.body.textContent = finalText;
     history.push({ role: 'user', content: userText });
     history.push({ role: 'assistant', content: finalText });
     trimHistory();
-    // Valuation flow (live path): detect booking agreement and update Panel 3.
-    if (/valuation|appointment|book(ed|ing)?|drop.?off|come in|see you/i.test(userText + ' ' + finalText)
-        && /yes|sure|book|confirm|sounds good|let's do|perfect/i.test(finalText + ' ' + userText)) {
+    // Valuation flow (live path): explicit BOOKED token from the model books the slot.
+    if (booked) {
       var slot = bookViaChat();
       if (slot) sysNote('CALENDAR UPDATED — VALUATION HOLD ADDED TO BOOKING PANEL');
     }
