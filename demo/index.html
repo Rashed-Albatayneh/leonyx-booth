@@ -1381,6 +1381,22 @@
     });
   }
 
+  /* ================= Kiosk: keep the booth screen awake =================
+     Screen Wake Lock API (works on https:// and file:// in modern Chromium;
+     iOS/iPadOS Safari 16.4+). Silent no-op if unsupported. Re-acquires
+     automatically after the tab sleeps or the tablet locks. */
+  var wakeLock = null;
+  async function requestWakeLock() {
+    try {
+      if (!('wakeLock' in navigator)) return;
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', function () { wakeLock = null; });
+    } catch (_) { /* denied or unsupported - never critical */ }
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible' && !wakeLock) requestWakeLock();
+  });
+  requestWakeLock();
   /* ================= Boot ================= */
 
   renderCalendar();

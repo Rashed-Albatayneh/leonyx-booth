@@ -62,3 +62,11 @@ Then check https://rashed-albatayneh.github.io/leonyx-booth/demo/ renders
 (allow ~1 min for the Pages rebuild). Rollback if ever needed:
 
     git revert <merge-commit-sha> && git push origin main
+
+## Extras included
+- **Screen stays awake:** the demo holds a screen wake-lock while visible, so a booth
+  tablet/laptop won't dim mid-pitch. Needs no setup; silently skips itself on browsers
+  that don't support it.
+- **QR table card:** print `demo/BOOTH-QR-CARD.html` (A6 landscape table-tent size)
+  alongside `demo/qr-leonyx-demo.png`. Prospects scan and try the demo on their own
+  phones — the URL points at the published live site.
