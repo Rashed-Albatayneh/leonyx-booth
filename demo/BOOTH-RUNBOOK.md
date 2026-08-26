@@ -47,3 +47,18 @@ except the AI receptionist chat when you connect a live model.
   demo never freezes
 - Rapid tap/double-submit guarded; no duplicate answers
 - No horizontal overflow at 1280×800 (laptop) and 820×1180 (iPad portrait); clean console
+
+## Publishing online (optional — booth runs fine without it)
+Confirmed facts: GitHub Pages serves this repo from the `main` branch, repo root,
+at https://rashed-albatayneh.github.io/leonyx-booth/. The demo adds only
+`demo/index.html` (+ runbook); it changes nothing on the existing site. The demo
+uses no repo-relative asset paths, so it works unchanged at the `/demo/` subpath.
+
+When ready (`feature/demo` is a clean fast-forward of origin/main):
+
+    git checkout main && git merge feature/demo && git push origin main
+
+Then check https://rashed-albatayneh.github.io/leonyx-booth/demo/ renders
+(allow ~1 min for the Pages rebuild). Rollback if ever needed:
+
+    git revert <merge-commit-sha> && git push origin main
