@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leonyx — Live Interactive Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&amp;family=Source+Sans+3:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     Design tokens — copied VERBATIM from index.html deck
+     (:root[data-theme="dark"] block) — do not edit values here.
+     ============================================================ */
+  :root[data-theme="dark"] {
+    --bg: #12100c;
+    --surface: #1c1812;
+    --surface-2: #241e15;
+    --ink: #f3ede0;
+    --ink-soft: #a89d86;
+    --border: #34291a;
+    --accent: #d4a94a;
+    --accent-strong: #f0c766;
+    --accent-soft: rgba(212, 169, 74, 0.14);
+    --on-accent: #16130c;
+    --shadow: rgba(0, 0, 0, 0.4);
+    --glow-weak: rgba(212, 169, 74, 0.14);
+
+    /* Motion tokens: one small set of durations + easings, applied by role.
+       fast = snap interactions (press, hover, dot switch)
+       base = small UI fades/lifts        slide = deck slide changes */
+    --dur-fast: 0.15s;
+    --dur-base: 0.25s;
+    --dur-slide: 0.4s;
+    --ease-snap: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-glide: cubic-bezier(0.22, 1, 0.36, 1);
+
+    --ok: #7fb069;
+    --warn: #c96f4a;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  html, body { max-width: 100%; overflow-x: hidden; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .wordmark {
+    font-family: "Big Shoulders Display", ui-sans-serif, sans-serif;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+  }
+  .mono-label {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-size: 0.72rem;
+    margin: 0;
+  }
+
+  /* ============ Header ============ */
+  header.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 14px clamp(16px, 3vw, 36px);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+  .brand { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .brand .wordmark { font-size: 2rem; line-height: 1; }
+  .brand .wordmark .x { color: var(--accent); }
+
+  .tier-switcher {
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--surface-2);
+    margin-left: auto;
+  }
+  .tier-switcher button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--ink-soft);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-weight: 600;
+    font-size: 0.82rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 12px 18px;
+    min-height: 44px;
+    cursor: pointer;
+    transition: background var(--dur-fast) var(--ease-snap), color var(--dur-fast) var(--ease-snap);
+    white-space: nowrap;
+  }
+  .tier-switcher button[aria-pressed="true"] {
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+  .tier-switcher button:focus-visible,
+  button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible {
+    outline: 2px solid var(--accent-strong);
+    outline-offset: 2px;
+  }
+
+  /* ============ Layout ============ */
+  main.panels {
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: clamp(14px, 2.5vw, 28px);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(14px, 2vw, 22px);
+    align-items: start;
+    flex: 1;
+  }
+  @media (max-width: 1120px) {
+    main.panels { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  /* ============ Panel shell ============ */
+  section.panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 10px 30px var(--shadow);
+    overflow: hidden;
+    min-width: 0;
+    transition: opacity var(--dur-base) var(--ease-glide);
+  }
+  .panel-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 14px 18px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .panel-head h2 {
+    font-family: "Big Shoulders Display", ui-sans-serif, sans-serif;
+    font-weight: 800;
+    font-size: 1.45rem;
+    letter-spacing: 0.03em;
+    margin: 0;
+    text-transform: uppercase;
+  }
+  .tier-chip {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--ink-soft);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px 10px;
+    white-space: nowrap;
+  }
+  .sim-badge {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--warn);
+    white-space: nowrap;
+  }
+  .panel-body { padding: 16px 18px 18px; }
+
+  /* Dimmed locked upsell state */
+  section.panel.is-locked .panel-head h2 { color: var(--ink-soft); }
+  section.panel.is-locked .panel-body { display: none; }
+  .lock-row {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 18px;
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+  }
+  section.panel.is-locked .lock-row { display: flex; }
+  section.panel.is-locked { cursor: default; }
+  .lock-icon {
+    flex: 0 0 auto;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--accent);
+    font-size: 1rem;
+  }
+  .lock-row b { color: var(--ink); font-weight: 600; }
+
+  /* ============ Panel 1: Receptionist chat ============ */
+  #offlineBanner {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 18px 0;
+    padding: 10px 14px;
+    border: 1px dashed var(--warn);
+    border-radius: 10px;
+    color: var(--warn);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.74rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+  }
+  #offlineBanner.show { display: flex; }
+  #offlineBanner button {
+    appearance: none;
+    margin-left: auto;
+    background: transparent;
+    border: 0;
+    color: inherit;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 4px;
+  }
+
+  .chat-log {
+    height: 300px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 4px 2px;
+    scroll-behavior: smooth;
+  }
+  .msg { max-width: 88%; padding: 9px 13px; border-radius: 12px; font-size: 0.94rem; }
+  .msg.user {
+    align-self: flex-end;
+    background: var(--accent);
+    color: var(--on-accent);
+    border-bottom-right-radius: 4px;
+  }
+  .msg.ai {
+    align-self: flex-start;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 4px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .msg-tag {
+    display: block;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    color: var(--ink-soft);
+    margin-top: 6px;
+  }
+  .sysnote {
+    align-self: center;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+    color: var(--ok);
+    border: 1px dashed var(--border);
+    border-radius: 999px;
+    padding: 4px 12px;
+    text-transform: uppercase;
+  }
+  .typing { display: inline-flex; gap: 4px; align-items: center; }
+  .typing i {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+    animation: blink 1s infinite var(--ease-glide);
+  }
+  .typing i:nth-child(2) { animation-delay: 0.18s; }
+  .typing i:nth-child(3) { animation-delay: 0.36s; }
+  @keyframes blink { 0%, 100% { opacity: 0.25; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-2px); } }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .chip {
+    appearance: none;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--ink);
+    font-size: 0.86rem;
+    border-radius: 999px;
+    padding: 10px 14px;
+    min-height: 44px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color var(--dur-fast) var(--ease-snap), background var(--dur-fast) var(--ease-snap);
+  }
+  .chip:hover { border-color: var(--accent); background: var(--accent-soft); }
+
+  .chat-inputbar {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: nowrap;
+  }
+  .chat-inputbar input[type="text"] {
+    flex: 1 1 160px;
+    min-width: 0;
+    font-size: 16px;
+    padding: 11px 14px;
+    min-height: 48px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+  .chat-inputbar input::placeholder { color: var(--ink-soft); }
+  .btn-send, .btn-ghost {
+    appearance: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    min-height: 48px;
+  }
+  .btn-send {
+    border: 0;
+    background: var(--accent);
+    color: var(--on-accent);
+    padding: 0 20px;
+    font-size: 0.86rem;
+    flex-shrink: 0;
+  }
+  .btn-send:hover { background: var(--accent-strong); }
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--ink);
+    padding: 0 16px;
+    font-size: 0.8rem;
+  }
+  .btn-ghost:hover { border-color: var(--accent); }
+
+  .settings-btn {
+    appearance: none;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--ink-soft);
+    border-radius: 10px;
+    min-height: 44px;
+    padding: 0 14px;
+    cursor: pointer;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    flex-shrink: 0;
+  }
+  .settings-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+  .popover-anchor { position: relative; }
+  #settingsPopover {
+    display: none;
+    position: absolute;
+    z-index: 40;
+    top: 52px;
+    left: 0;
+    width: min(430px, calc(100vw - 48px));
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 16px 40px var(--shadow);
+    padding: 16px;
+  }
+  #settingsPopover.open { display: block; }
+  #settingsPopover label {
+    display: block;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 12px 0 4px;
+  }
+  #settingsPopover select, #settingsPopover input {
+    width: 100%;
+    font-size: 16px;
+    padding: 10px 12px;
+    min-height: 44px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--ink);
+  }
+  #settingsPopover .row2 { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  #settingsPopover .fineprint {
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    margin: 10px 0 0;
+  }
+
+  /* ============ Panel 2: Website & SEO before/after ============ */
+  .ba-toggle { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; margin-bottom: 12px; }
+  .ba-toggle button {
+    appearance: none; border: 0; background: transparent; cursor: pointer;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.76rem; font-weight: 600; letter-spacing: 0.1em;
+    color: var(--ink-soft); padding: 9px 16px; min-height: 40px;
+  }
+  .ba-toggle button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+
+  .ba-wrap {
+    position: relative;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+    background: var(--surface-2);
+  }
+  .ba-layer { position: absolute; inset: 0; padding: clamp(10px, 2vw, 18px); overflow: hidden; }
+  .ba-before { background: #d9d4c7; color: #4a463c; }
+  .ba-before .fake-url {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.66rem; color: #7a756a; letter-spacing: 0.04em; margin: 0 0 8px;
+  }
+  .ba-before h3 { font-family: Georgia, serif; font-size: 1.05rem; margin: 0 0 6px; color: #5a5548; font-weight: 400; }
+  .ba-before p { font-size: 0.78rem; margin: 0 0 8px; color: #6b665a; }
+  .rank-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+  .rank-badges span {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.62rem; font-weight: 600; letter-spacing: 0.05em;
+    background: #c4beae; color: #55503f; border-radius: 4px; padding: 3px 8px;
+  }
+  .ba-after {
+    background: linear-gradient(135deg, var(--surface-2) 0%, var(--bg) 100%);
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path var(--dur-slide) var(--ease-glide);
+    display: flex;
+    flex-direction: column;
+  }
+  .ba-wrap.show-after .ba-after { clip-path: inset(0 0 0 0); }
+  .ba-hero {
+    background: linear-gradient(120deg, var(--accent) 0%, var(--accent-strong) 100%);
+    color: var(--on-accent);
+    border-radius: 8px;
+    padding: clamp(10px, 1.8vw, 16px);
+    margin-bottom: 10px;
+  }
+  .ba-hero h3 {
+    font-family: "Big Shoulders Display", ui-sans-serif, sans-serif;
+    font-weight: 900;
+    font-size: clamp(1.3rem, 2.6vw, 1.9rem);
+    margin: 0;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .ba-hero p { margin: 4px 0 0; font-size: 0.78rem; font-weight: 600; opacity: 0.85; }
+  .seo-checklist { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .seo-checklist li {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.84rem; color: var(--ink);
+  }
+  .seo-checklist .tick {
+    flex: 0 0 auto;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--ok); color: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem; font-weight: 700;
+  }
+  .ba-caption {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em;
+    color: var(--ink-soft); text-transform: uppercase;
+    margin-top: 10px;
+  }
+
+  /* ============ Panel 3: Booking ============ */
+  .cal-week {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .cal-day {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    min-height: 118px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+  .cal-day .dow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.62rem; font-weight: 600; letter-spacing: 0.08em;
+    color: var(--ink-soft); text-transform: uppercase;
+  }
+  .cal-day .dom { font-family: "Big Shoulders Display", ui-sans-serif, sans-serif; font-weight: 800; font-size: 1.05rem; line-height: 1; }
+  .appt {
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    color: var(--ink);
+    border-radius: 6px;
+    padding: 4px 6px;
+    font-size: 0.66rem;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+  .appt b { color: var(--accent-strong); font-weight: 600; display: block; }
+  .appt.chat-booked { border-style: dashed; }
+  @media (max-width: 480px) { .cal-week { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+
+  .sms-block { margin-top: 14px; }
+  .sms-thread {
+    display: flex; flex-direction: column; gap: 8px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+  }
+  .sms {
+    max-width: 92%;
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-size: 0.84rem;
+  }
+  .sms.out {
+    align-self: flex-start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .sms .sms-time {
+    display: block;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.6rem; letter-spacing: 0.08em;
+    color: var(--ink-soft); margin-top: 4px;
+  }
+  .sms-mini-lock {
+    display: flex; align-items: center; gap: 10px;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    color: var(--ink-soft);
+    font-size: 0.86rem;
+  }
+
+  /* ============ Panel 4: Price Watch ============ */
+  .pw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 560px) { .pw-grid { grid-template-columns: 1fr; } }
+  .pw-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    min-width: 0;
+  }
+  .pw-card h4 { margin: 0; font-size: 0.86rem; font-weight: 600; }
+  .pw-card .sub { font-size: 0.72rem; color: var(--ink-soft); margin: 1px 0 6px; }
+  .pw-row { display: flex; align-items: flex-end; gap: 8px; }
+  .pw-price { font-family: "IBM Plex Mono", ui-monospace, monospace; font-weight: 600; font-size: 0.95rem; }
+  .delta {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.68rem; font-weight: 600;
+    border-radius: 999px; padding: 2px 8px;
+  }
+  .delta.up { color: var(--ok); background: rgba(127, 176, 105, 0.12); }
+  .delta.down { color: var(--warn); background: rgba(201, 111, 74, 0.14); }
+  .spark { display: block; width: 100%; height: 34px; margin-top: 4px; }
+  .spark polyline { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .spark .area { fill: url(#sparkFill); stroke: none; opacity: 0.55; }
+
+  .ig-card {
+    margin-top: 12px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--surface-2);
+    max-width: 340px;
+  }
+  .ig-img {
+    aspect-ratio: 1 / 1;
+    background:
+      radial-gradient(circle at 30% 30%, rgba(212,169,74,0.35), transparent 55%),
+      radial-gradient(circle at 70% 70%, rgba(240,199,102,0.25), transparent 55%),
+      var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Big Shoulders Display", ui-sans-serif, sans-serif;
+    font-weight: 900; font-size: 1.6rem; letter-spacing: 0.04em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+  .ig-body { padding: 10px 12px 12px; }
+  .ig-body p { margin: 0; font-size: 0.82rem; }
+  .ig-meta {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.64rem; letter-spacing: 0.07em;
+    color: var(--ink-soft); margin-top: 6px; display: block;
+  }
+
+  /* ============ Footer ============ */
+  footer.disclaimer {
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    padding: 12px clamp(16px, 3vw, 36px);
+    text-align: center;
+  }
+  footer.disclaimer p {
+    margin: 0;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="wordmark">LEONY<span class="x">X</span></span>
+    <p class="mono-label">Live Interactive Demo</p>
+  </div>
+  <div class="tier-switcher" role="group" aria-label="Package tier" id="tierSwitcher">
+    <button type="button" data-tier="starter" aria-pressed="false">Starter<br>$997</button>
+    <button type="button" data-tier="growth" aria-pressed="true">Growth<br>$1,497</button>
+    <button type="button" data-tier="fullstack" aria-pressed="false">Full Stack<br>$1,997</button>
+  </div>
+</header>
+
+<main class="panels">
+
+  <!-- ============ PANEL 1 — AI PHONE RECEPTIONIST (all tiers) ============ -->
+  <section class="panel" id="panelReceptionist" aria-labelledby="h-recep">
+    <div class="panel-head">
+      <h2 id="h-recep">AI Phone Receptionist</h2>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="sim-badge">SIMULATED CALLER · NO REAL LINE</span>
+        <span class="tier-chip">ALL TIERS</span>
+      </div>
+    </div>
+    <div id="offlineBanner" role="status">
+      <span>OFFLINE DEMO MODE — SCRIPTED SAMPLE ANSWERS</span>
+      <button type="button" id="closeBanner" aria-label="Dismiss offline banner">✕</button>
+    </div>
+    <div class="panel-body">
+      <div class="chat-log" id="chatLog" aria-live="polite"></div>
+      <div class="chips" aria-label="Sample caller questions">
+        <button type="button" class="chip" data-scenario="buylist">&ldquo;What are you paying for a Charizard?&rdquo;</button>
+        <button type="button" class="chip" data-scenario="psa">PSA grading submission question</button>
+        <button type="button" class="chip" data-scenario="collection">&ldquo;I&rsquo;ve got a collection I want to sell&rdquo;</button>
+      </div>
+      <form class="chat-inputbar" id="chatForm" autocomplete="off">
+        <input type="text" id="chatInput" placeholder="Type a caller question…" aria-label="Caller question">
+        <button type="submit" class="btn-send" id="btnSend">SEND</button>
+        <span class="popover-anchor">
+          <button type="button" class="settings-btn" id="btnSettings" aria-haspopup="dialog" aria-expanded="false">⚙ SETTINGS</button>
+          <div id="settingsPopover" role="dialog" aria-label="LLM provider settings">
+            <p class="mono-label">LLM Provider</p>
+            <label for="llmProvider">Provider preset</label>
+            <select id="llmProvider">
+              <option value="openrouter">OpenRouter (default)</option>
+              <option value="custom">Custom — any OpenAI-compatible endpoint</option>
+            </select>
+            <label for="llmBaseUrl">Base URL</label>
+            <input type="text" id="llmBaseUrl" placeholder="https://openrouter.ai/api/v1" spellcheck="false">
+            <label for="llmModel">Model ID</label>
+            <input type="text" id="llmModel" placeholder="e.g. openai/gpt-4o-mini" spellcheck="false">
+            <label for="llmApiKey">API Key</label>
+            <input type="password" id="llmApiKey" placeholder="sk-…" autocomplete="off" spellcheck="false">
+            <div class="row2">
+              <button type="button" class="btn-send" id="saveSettings">SAVE</button>
+              <button type="button" class="btn-ghost" id="clearKey">CLEAR KEY</button>
+              <button type="button" class="btn-ghost" id="closeSettings">CLOSE</button>
+            </div>
+            <p class="fineprint">Your key is stored in this browser&rsquo;s localStorage only — never logged or committed. It is sent solely to the endpoint you configure above.</p>
+            <p class="fineprint" id="settingsStatus"></p>
+          </div>
+        </span>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ PANEL 2 — WEBSITE & SEO (Growth+) ============ -->
+  <section class="panel" id="panelWebsite" aria-labelledby="h-web">
+    <div class="panel-head">
+      <h2 id="h-web">Website Redesign &amp; SEO</h2>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="sim-badge">MOCKUP PREVIEW</span>
+        <span class="tier-chip">GROWTH+</span>
+      </div>
+    </div>
+    <div class="lock-row">
+      <span class="lock-icon" aria-hidden="true">🔒</span>
+      <span><b>Included in Growth +$500</b> — before/after redesign preview unlocks here.</span>
+    </div>
+    <div class="panel-body">
+      <div class="ba-toggle" role="group" aria-label="Before or after view">
+        <button type="button" id="baToggleBefore" aria-pressed="true">BEFORE</button>
+        <button type="button" id="baToggleAfter" aria-pressed="false">AFTER</button>
+      </div>
+      <div class="ba-wrap" id="baWrap">
+        <div class="ba-layer ba-before">
+          <p class="fake-url">yellowpages-listing.example/northside-cards (page 4 of results)</p>
+          <h3>northside cards - trading cards | directory listing</h3>
+          <p>Hours may be outdated. No photos. Contact form goes nowhere. Buried in directories.</p>
+          <div class="rank-badges">
+            <span>#47 IN SEARCH</span><span>NO META DESCRIPTION</span><span>NO SCHEMA</span><span>MOBILE SPEED 21</span>
+          </div>
+          <p class="ba-caption" style="color:#7a756a;">Before — buried in directories</p>
+        </div>
+        <div class="ba-layer ba-after">
+          <div class="ba-hero">
+            <h3>Northside Cards</h3>
+            <p>TCG singles · sealed · buylists · PSA drop-off — northsidecards.example</p>
+          </div>
+          <ul class="seo-checklist">
+            <li><span class="tick" aria-hidden="true">✓</span> Title tag &amp; meta description</li>
+            <li><span class="tick" aria-hidden="true">✓</span> LocalBusiness schema markup</li>
+            <li><span class="tick" aria-hidden="true">✓</span> Mobile speed 95+</li>
+            <li><span class="tick" aria-hidden="true">✓</span> Business name in H1, local pages indexed</li>
+          </ul>
+        </div>
+      </div>
+      <p class="ba-caption" id="baCaption">Before: buried in directories → press AFTER to wipe</p>
+    </div>
+  </section>
+
+  <!-- ============ PANEL 3 — BOOKING AUTOMATION (Growth+, SMS at Full Stack) ============ -->
+  <section class="panel" id="panelBooking" aria-labelledby="h-book">
+    <div class="panel-head">
+      <h2 id="h-book">Booking Automation</h2>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="sim-badge">SIMULATED — NO MESSAGES SENT</span>
+        <span class="tier-chip">GROWTH+</span>
+      </div>
+    </div>
+    <div class="lock-row">
+      <span class="lock-icon" aria-hidden="true">🔒</span>
+      <span><b>Included in Growth +$500</b> — valuation calendar integration unlocks here.</span>
+    </div>
+    <div class="panel-body">
+      <p class="mono-label" style="margin-bottom:8px;">Week of Aug 31 – Sep 4 · Valuation Appointments</p>
+      <div class="cal-week" id="calWeek"><!-- built by JS (deterministic) --></div>
+      <div class="sms-block" id="smsBlockFullStack" style="display:none;">
+        <p class="mono-label" style="margin-bottom:8px;">Automated SMS Reminders</p>
+        <div class="sms-thread">
+          <div class="sms out">Northside Cards: Reminder — your card valuation is tomorrow, Tue Sep 1 at 11:00 AM. Reply R to confirm.<span class="sms-time">SENT · 24H BEFORE</span></div>
+          <div class="sms out">Northside Cards: See you in 1 hour — valuation at 11:00 AM. Bring the binder!<span class="sms-time">SENT · 1H BEFORE</span></div>
+        </div>
+      </div>
+      <div class="sms-block" id="smsBlockLocked">
+        <div class="sms-mini-lock">
+          <span aria-hidden="true">🔒</span>
+          <span><b style="color:var(--ink)">Included in Full Stack +$500</b> — automated 24&nbsp;hr / 1&nbsp;hr SMS reminder bubbles light up here.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PANEL 4 — PRICE WATCH (Full Stack only) ============ -->
+  <section class="panel" id="panelPriceWatch" aria-labelledby="h-pw">
+    <div class="panel-head">
+      <h2 id="h-pw">Price Watch + Auto-Post</h2>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="sim-badge">SIMULATED MARKET DATA</span>
+        <span class="tier-chip">FULL STACK</span>
+      </div>
+    </div>
+    <div class="lock-row">
+      <span class="lock-icon" aria-hidden="true">🔒</span>
+      <span><b>Included in Full Stack +$1,000</b> — market monitoring dashboard unlocks here.</span>
+    </div>
+    <div class="panel-body">
+      <div class="pw-grid" id="pwGrid"><!-- built by JS (seeded) --></div>
+      <div class="ig-card">
+        <div class="ig-img">Northside Cards</div>
+        <div class="ig-body">
+          <p>🔥 New PSA 10 Umbreon VMAX alt art just hit our case — ask us about trade credit.</p>
+          <span class="ig-meta">AUTO-POSTED 02:14 — WHILE YOU SLEPT · SIMULATED FEED</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="disclaimer">
+  <p>Demo simulation — not connected to any shop&rsquo;s live inventory, phone lines, or social accounts.</p>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ================= Deterministic seeded utilities ================= */
+
+  // xmur3 string hash -> 32-bit seed, mulberry32 PRNG (deterministic across restarts)
+  function xmur3(str) {
+    var h = 1779033703 ^ str.length;
+    for (var i = 0; i < str.length; i++) {
+      h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+      h = (h << 13) | (h >>> 19);
+    }
+    return function () {
+      h = Math.imul(h ^ (h >>> 16), 2246822507);
+      h = Math.imul(h ^ (h >>> 13), 3266489909);
+      return (h ^= h >>> 16) >>> 0;
+    };
+  }
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      var t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  var reduceMotion = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ================= Tier gating (matrix source of truth) =================
+     Receptionist chat ......... ALL tiers
+     Website & SEO ............. Growth+
+     Booking calendar .......... Growth+
+     SMS reminder bubbles ...... Full Stack ONLY
+     Price Watch + IG post ..... Full Stack ONLY                       */
+
+  var TIER_ORDER = ['starter', 'growth', 'fullstack'];
+  var UPSellText = {
+    website:   'Included in Growth +$500',
+    booking:   'Included in Growth +$500',
+    sms:       'Included in Full Stack +$500',
+    pricewatch:'Included in Full Stack +$1,000'
+  };
+
+  var els = {};
+  ['tierSwitcher','panelReceptionist','panelWebsite','panelBooking','panelPriceWatch',
+   'chatLog','chatForm','chatInput','btnSend','btnSettings','settingsPopover',
+   'llmProvider','llmBaseUrl','llmModel','llmApiKey','saveSettings','clearKey',
+   'closeSettings','settingsStatus','offlineBanner','closeBanner',
+   'baWrap','baToggleBefore','baToggleAfter','baCaption',
+   'calWeek','smsBlockFullStack','smsBlockLocked','pwGrid'
+  ].forEach(function (id) {
+    els[id] = document.getElementById(id);
+  });
+
+  function setTier(tier) {
+    var idx = TIER_ORDER.indexOf(tier);
+    Array.prototype.forEach.call(els.tierSwitcher.querySelectorAll('button'), function (b) {
+      b.setAttribute('aria-pressed', String(b.getAttribute('data-tier') === tier));
+    });
+    var growthPlus = idx >= TIER_ORDER.indexOf('growth');
+    var fullPlus   = idx >= TIER_ORDER.indexOf('fullstack');
+
+    els.panelWebsite.classList.toggle('is-locked', !growthPlus);
+    els.panelBooking.classList.toggle('is-locked', !growthPlus);
+    els.panelPriceWatch.classList.toggle('is-locked', !fullPlus);
+
+    // SMS reminder bubbles: Full Stack ONLY (mini-lock inside the calendar panel)
+    els.smsBlockFullStack.style.display = fullPlus ? '' : 'none';
+    els.smsBlockLocked.style.display = fullPlus ? 'none' : '';
+    els.smsBlockLocked.querySelector('b').textContent = UPSellText.sms;
+
+    if (growthPlus) maybePlayWipe();
+  }
+
+  els.tierSwitcher.addEventListener('click', function (e) {
+    var btn = e.target.closest('button[data-tier]');
+    if (btn) setTier(btn.getAttribute('data-tier'));
+  });
+
+  /* ================= Panel 3 — deterministic calendar state ================= */
+
+  var DAYS = [
+    { dow: 'Mon', dom: 31 }, { dow: 'Tue', dom: 1 }, { dow: 'Wed', dom: 2 },
+    { dow: 'Thu', dom: 3 }, { dow: 'Fri', dom: 4 }
+  ];
+  // day index 0..4, time, label, source
+  var preBooked = [
+    { day: 1, time: '11:00 AM', label: 'M. Ortiz · ~200-card collection' },
+    { day: 2, time: '2:30 PM',  label: 'D. Kim · PSA submission batch' },
+    { day: 4, time: '10:30 AM', label: 'Walk-in hold · binder review' }
+  ];
+  var chatSlotPool = [
+    { day: 0, time: '4:30 PM' },
+    { day: 2, time: '10:00 AM' },
+    { day: 3, time: '1:00 PM' },
+    { day: 3, time: '4:00 PM' },
+    { day: 0, time: '1:30 PM' },
+    { day: 1, time: '3:00 PM' }
+  ];
+  var chatBookedCount = 0;
+
+  function renderCalendar() {
+    els.calWeek.textContent = '';
+    DAYS.forEach(function (d, di) {
+      var col = document.createElement('div');
+      col.className = 'cal-day';
+      var dow = document.createElement('div'); dow.className = 'dow'; dow.textContent = d.dow;
+      var dom = document.createElement('div'); dom.className = 'dom'; dom.textContent = String(d.dom);
+      col.appendChild(dow); col.appendChild(dom);
+      preBooked.filter(function (a) { return a.day === di; }).forEach(function (a) {
+        col.appendChild(apptEl(a.time, a.label, !!a.viaChat));
+      });
+      els.calWeek.appendChild(col);
+    });
+  }
+  function apptEl(time, label, viaChat) {
+    var el = document.createElement('div');
+    el.className = 'appt' + (viaChat ? ' chat-booked' : '');
+    var t = document.createElement('b'); t.textContent = time;
+    el.appendChild(t);
+    el.appendChild(document.createTextNode(label));
+    return el;
+  }
+  function nextChatSlot() {
+    if (chatBookedCount >= chatSlotPool.length) return null;
+    return chatSlotPool[chatBookedCount];
+  }
+  // Called by BOTH scripted and live flows: writes valuation hold into calendar state.
+  function bookViaChat() {
+    var slot = nextChatSlot();
+    if (!slot) return null;
+    chatBookedCount++;
+    preBooked.push({
+      day: slot.day, time: slot.time,
+      label: 'Booked via receptionist · valuation',
+      viaChat: true
+    });
+    renderCalendar();
+    return slot;
+  }
+  function nextOpenSlotLabel() {
+    var s = nextChatSlot();
+    if (!s) return 'the week after';
+    return DAYS[s.day].dow + ' Sep ' + DAYS[s.day].dom + ' at ' + s.time;
+  }
+
+  /* ================= Panel 4 — seeded sparklines (deterministic) ================= */
+
+  var PW_CARDS = [
+    { id: 'charizard-bsu', name: 'Charizard · Base Set (Unlimited)', grade: 'PSA 10', start: 17900 },
+    { id: 'umbreon-vmax',  name: 'Umbreon VMAX · Alt Art',           grade: 'PSA 10', start: 1170 },
+    { id: 'blastoise-bs',  name: 'Blastoise · Base Set Holo',        grade: 'PSA 9',  start: 3940 },
+    { id: 'lugia-ng',      name: 'Lugia · Neo Genesis 1st Ed',       grade: 'PSA 9',  start: 2540 }
+  ];
+
+  function seededSeries(id, start) {
+    var rnd = mulberry32(xmur3('leonyx-demo:' + id)());
+    var pts = [], v = start;
+    for (var i = 0; i < 24; i++) {
+      pts.push(v);
+      v *= 1 + (rnd() - 0.46) * 0.05; // slight upward drift, deterministic
+    }
+    return pts;
+  }
+
+  function fmtMoney(n) {
+    return '$' + Math.round(n).toLocaleString('en-US');
+  }
+
+  function renderPriceWatch() {
+    var NS = 'http://www.w3.org/2000/svg';
+    els.pwGrid.textContent = '';
+    PW_CARDS.forEach(function (c) {
+      var series = seededSeries(c.id, c.start);
+      var first = series[0], last = series[series.length - 1];
+      var pct = ((last - first) / first) * 100;
+
+      var card = document.createElement('div'); card.className = 'pw-card';
+      var h = document.createElement('h4'); h.textContent = c.name;
+      var sub = document.createElement('div'); sub.className = 'sub';
+      sub.textContent = c.grade + ' · last 30 days';
+      var row = document.createElement('div'); row.className = 'pw-row';
+      var price = document.createElement('span'); price.className = 'pw-price';
+      price.textContent = fmtMoney(last);
+      var delta = document.createElement('span');
+      delta.className = 'delta ' + (pct >= 0 ? 'up' : 'down');
+      delta.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%';
+      row.appendChild(price); row.appendChild(delta);
+
+      // sparkline SVG (inline, no external asset)
+      var svg = document.createElementNS(NS, 'svg');
+      svg.setAttribute('viewBox', '0 0 120 34');
+      svg.setAttribute('preserveAspectRatio', 'none');
+      svg.setAttribute('class', 'spark');
+      svg.setAttribute('role', 'img');
+      svg.setAttribute('aria-label', c.name + ' 30-day price trend sparkline (simulated)');
+      var min = Math.min.apply(null, series), max = Math.max.apply(null, series);
+      var span = (max - min) || 1;
+      var coords = series.map(function (val, i) {
+        var x = (i / (series.length - 1)) * 120;
+        var y = 31 - ((val - min) / span) * 28;
+        return x.toFixed(1) + ',' + y.toFixed(1);
+      }).join(' ');
+      var poly = document.createElementNS(NS, 'polyline');
+      poly.setAttribute('points', coords);
+      svg.appendChild(poly);
+
+      card.appendChild(h); card.appendChild(sub); card.appendChild(row); card.appendChild(svg);
+      els.pwGrid.appendChild(card);
+    });
+  }
+
+  /* ================= Panel 2 — before/after wipe ================= */
+
+  var wipePlayed = false; var wipeTimer = null;
+  function setWipe(showAfter) {
+    els.baWrap.classList.toggle('show-after', showAfter);
+    els.baToggleBefore.setAttribute('aria-pressed', String(!showAfter));
+    els.baToggleAfter.setAttribute('aria-pressed', String(showAfter));
+    els.baCaption.textContent = showAfter
+      ? 'After: found on page one, fast on mobile'
+      : 'Before: buried in directories → press AFTER to wipe';
+  }
+  function maybePlayWipe() {
+    if (wipePlayed || reduceMotion) return;
+    wipePlayed = true;
+    wipeTimer = window.setTimeout(function () { setWipe(true); }, 900);
+  }
+  function cancelPendingWipe() {
+    if (wipeTimer) { window.clearTimeout(wipeTimer); wipeTimer = null; }
+  }
+  els.baToggleBefore.addEventListener('click', function () { cancelPendingWipe(); setWipe(false); });
+  els.baToggleAfter.addEventListener('click', function () { cancelPendingWipe(); setWipe(true); });
+
+  /* ================= Settings (BYOK, localStorage only) =================
+     SECURITY NOTE: the key lives in this browser's localStorage only.
+     It is never written to disk elsewhere, never logged, never committed. */
+
+  var LS_KEY = 'leonyx.demo.settings.v1';
+  var PRESETS = { openrouter: 'https://openrouter.ai/api/v1' };
+
+  function loadSettings() {
+    try { return JSON.parse(window.localStorage.getItem(LS_KEY)) || {}; }
+    catch (_) { return {}; }
+  }
+  function saveSettingsObj(obj) {
+    window.localStorage.setItem(LS_KEY, JSON.stringify(obj));
+  }
+
+  var offlineMode = false; // flips true on no-key/network/CORS failure
+
+  function refreshSettingsStatus() {
+    var s = loadSettings();
+    var masked = s.apiKey ? ('••••' + s.apiKey.slice(-4)) : 'not set';
+    els.settingsStatus.textContent = 'Saved: preset=' + (s.provider || 'openrouter') +
+      ' · model=' + (s.model || '(default)') + ' · key ' + masked +
+      (s.apiKey ? '' : ' — chat runs in OFFLINE DEMO MODE until a key is saved.');
+  }
+  function syncPopoverFromStorage() {
+    var s = loadSettings();
+    els.llmProvider.value = s.provider || 'openrouter';
+    els.llmBaseUrl.value = s.baseUrl || PRESETS.openrouter;
+    els.llmBaseUrl.disabled = (els.llmProvider.value === 'openrouter');
+    els.llmModel.value = s.model || 'openai/gpt-4o-mini';
+    els.llmApiKey.value = s.apiKey || '';
+    refreshSettingsStatus();
+  }
+
+  els.btnSettings.addEventListener('click', function () {
+    var open = els.settingsPopover.classList.toggle('open');
+    els.btnSettings.setAttribute('aria-expanded', String(open));
+    if (open) syncPopoverFromStorage();
+  });
+  els.closeSettings.addEventListener('click', function () {
+    els.settingsPopover.classList.remove('open');
+    els.btnSettings.setAttribute('aria-expanded', 'false');
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      els.settingsPopover.classList.remove('open');
+      els.btnSettings.setAttribute('aria-expanded', 'false');
+    }
+  });
+  document.addEventListener('click', function (e) {
+    if (!els.settingsPopover.classList.contains('open')) return;
+    if (els.settingsPopover.contains(e.target) || els.btnSettings.contains(e.target)) return;
+    els.settingsPopover.classList.remove('open');
+    els.btnSettings.setAttribute('aria-expanded', 'false');
+  });
+  els.llmProvider.addEventListener('change', function () {
+    els.llmBaseUrl.disabled = (els.llmProvider.value === 'openrouter');
+    if (els.llmProvider.value === 'openrouter') {
+      els.llmBaseUrl.value = PRESETS.openrouter;
+    }
+  });
+  els.saveSettings.addEventListener('click', function () {
+    var obj = {
+      provider: els.llmProvider.value,
+      baseUrl: (els.llmBaseUrl.value || '').replace(/\/+$/, ''),
+      model: (els.llmModel.value || '').trim(),
+      apiKey: (els.llmApiKey.value || '').trim()
+    };
+    saveSettingsObj(obj);
+    disableOffline(); // a fresh key gives live mode another chance
+    syncPopoverFromStorage();
+    els.settingsPopover.classList.remove('open');
+    els.btnSettings.setAttribute('aria-expanded', 'false');
+    sysNote('SETTINGS SAVED · LIVE LLM MODE ARMED');
+  });
+  els.clearKey.addEventListener('click', function () {
+    els.llmApiKey.value = '';
+    var s = loadSettings(); s.apiKey = '';
+    saveSettingsObj(s);
+    refreshSettingsStatus();
+    enableOffline();
+  });
+  els.closeBanner.addEventListener('click', function () {
+    els.offlineBanner.classList.remove('show');
+  });
+
+  function enableOffline() {
+    offlineMode = true;
+    els.offlineBanner.classList.add('show');
+  }
+  function disableOffline() {
+    offlineMode = false;
+    els.offlineBanner.classList.remove('show');
+  }
+
+  /* ================= Chat — grounded persona + streaming + offline ================= */
+
+  var BUYLIST = [
+    'Charizard · Base Set Unlimited Holo — NM $85 / LP $60',
+    'Blastoise · Base Set Holo — NM $38',
+    'Venusaur · Base Set Holo — NM $32',
+    'Umbreon VMAX · Evolving Skies Alt Art — NM $420',
+    'Mewtwo · Base Set Holo — NM $45',
+    'Lugia · Neo Genesis Holo — NM $210'
+  ].join('\n');
+
+  var HISTORY_CAP = 12;
+  var history = []; // {role, content}
+
+  function buildSystemPrompt() {
+    return [
+      'You are the phone receptionist for "Northside Cards", a FICTIONAL trading card shop used in a booth demo. You are a simulation, clearly labeled on screen.',
+      'Stay in character, be warm and brief (2-4 sentences — this renders in a kiosk transcript). Never invent facts beyond this briefing; if asked something not covered, offer to take a message.',
+      '',
+      'FAKE BUYLIST (cash paid, NM/LP):',
+      BUYLIST,
+      '',
+      'PSA INTAKE SCRIPT: we accept PSA drop-offs at the counter. We inspect, photograph, and submit weekly on Tuesdays. Value tier $15/card (declared value up to $199, ~45 business days), Regular tier $25/card (up to $499). Insurance included. Payment due at drop-off.',
+      'DROP-OFF SCHEDULE: buylist drop-offs Mon-Sat 10am-6pm, no appointment needed. Card valuations are BY APPOINTMENT.',
+      'VALUATION APPOINTMENTS: next open slot is ' + nextOpenSlotLabel() + '. When a seller sounds ready to sell a collection or asks for a valuation, offer that slot and, if they agree, confirm it as booked.',
+      'Reminder: all of this describes a fictional shop; never claim to be a real business or give legal advice.'
+    ].join('\n');
+  }
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+  function scrollLog() { els.chatLog.scrollTop = els.chatLog.scrollHeight; }
+
+  function addUserBubble(text) {
+    var b = el('div', 'msg user', text);
+    els.chatLog.appendChild(b);
+    scrollLog();
+    return b;
+  }
+  function addAiBubble() {
+    var b = el('div', 'msg ai');
+    var body = el('span', 'ai-body', '');
+    var tag = el('span', 'msg-tag', 'AI · SIMULATED RECEPTIONIST');
+    b.appendChild(body); b.appendChild(tag);
+    els.chatLog.appendChild(b);
+    scrollLog();
+    return { root: b, body: body, tag: tag };
+  }
+  function sysNote(text) {
+    els.chatLog.appendChild(el('div', 'sysnote', text + ' · SIMULATED'));
+    scrollLog();
+  }
+  function addTyping() {
+    var t = el('div', 'msg ai');
+    var ty = el('span', 'typing');
+    ty.appendChild(el('i')); ty.appendChild(el('i')); ty.appendChild(el('i'));
+    t.appendChild(ty);
+    els.chatLog.appendChild(t);
+    scrollLog();
+    return t;
+  }
+
+  var SCENARIOS = {
+    buylist: 'What are you paying for a Charizard?',
+    psa: 'How does a PSA grading submission work through you?',
+    collection: "I've got a collection I want to sell."
+  };
+  Array.prototype.forEach.call(document.querySelectorAll('.chip[data-scenario]'), function (chip) {
+    chip.addEventListener('click', function () {
+      var text = SCENARIOS[chip.getAttribute('data-scenario')];
+      els.chatInput.value = '';
+      respond(text);
+    });
+  });
+
+  els.chatForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var text = els.chatInput.value.trim();
+    if (!text) return;
+    els.chatInput.value = '';
+    respond(text);
+  });
+
+  function classifyIntent(text) {
+    var t = text.toLowerCase();
+    if (/(charizard|paying|buylist|buy list|how much.*(pay|get)|price.*card)/.test(t)) return 'buylist';
+    if (/(psa|grad|slab|submission|bgs|cgc)/.test(t)) return 'psa';
+    if (/(collection|whole|lot|sell.*card|valuation|appraise)/.test(t)) return 'collection';
+    return 'generic';
+  }
+
+  var SCRIPTED = {
+    buylist: 'Great question! Today our buylist pays NM $85 (LP $60) for a Base Set Unlimited Charizard holo. Blastoise is at $38 and Venusaur $32 in NM. Drop-offs are Mon-Sat 10-6, cash or store credit — bring it by the counter!',
+    psa: 'We take PSA submissions right at the counter. We inspect and photo your cards, submit Tuesdays: Value tier is $15 a card (declared up to $199, about 45 business days back) and Regular is $25 (up to $499), insured. Want me to note a batch for you?',
+    collection: "Love to see it! For collections we do a free valuation appointment — the next open slot is %SLOT%. I can put you down and our buyer will go through it with you piece by piece. Shall I book it?",
+    generic: "Happy to help! I can quote buylist prices, explain PSA submissions through our counter, or set up a free valuation appointment for a collection. What's the card situation?"
+  };
+
+  function scriptedReply(userText) {
+    var intent = classifyIntent(userText);
+    var tpl = SCRIPTED[intent] || SCRIPTED.generic;
+    var text = tpl.replace('%SLOT%', nextOpenSlotLabel());
+
+    var typing = addTyping();
+    var delay = 650; // deterministic-feeling, well under ~1s budget
+    window.setTimeout(function () {
+      typing.remove();
+      var bubble = addAiBubble();
+      bubble.body.textContent = text;
+      history.push({ role: 'assistant', content: text });
+      trimHistory();
+
+      // Valuation flow writes into Panel 3 calendar state
+      if (intent === 'collection' || /book|appointment|valuation/i.test(userText)) {
+        var slot = bookViaChat();
+        if (slot) {
+          sysNote('CALENDAR UPDATED — VALUATION HOLD ADDED TO BOOKING PANEL');
+          bubble.body.textContent += " You're booked — " + DAYS[slot.day].dow + ' Sep ' + DAYS[slot.day].dom + ' at ' + slot.time + '.';
+        }
+      }
+      scrollLog();
+    }, delay);
+  }
+
+  function trimHistory() {
+    while (history.length > HISTORY_CAP) history.shift();
+  }
+
+  /* ---- Live LLM path (OpenAI-compatible /chat/completions, SSE streaming) ---- */
+
+  async function streamChat(cfg, userText) {
+    var baseUrl = (cfg.baseUrl || PRESETS.openrouter).replace(/\/+$/, '');
+    var headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + cfg.apiKey
+    };
+    if ((cfg.provider || 'openrouter') === 'openrouter') {
+      headers['X-Title'] = 'Leonyx Booth Demo';
+    }
+
+    var messages = [{ role: 'system', content: buildSystemPrompt() }]
+      .concat(history)
+      .concat([{ role: 'user', content: userText }]);
+
+    var res = await fetch(baseUrl + '/chat/completions', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({
+        model: cfg.model || 'openai/gpt-4o-mini',
+        messages: messages,
+        stream: true
+      })
+    });
+    if (!res.ok) {
+      throw new Error('LLM HTTP ' + res.status);
+    }
+    if (!res.body || !res.body.getReader) {
+      throw new Error('No streaming body');
+    }
+
+    var bubble = addAiBubble();
+    var reader = res.body.getReader();
+    var dec = new TextDecoder();
+    var buf = '';
+
+    while (true) {
+      var chunk = await reader.read();
+      if (chunk.done) break;
+      buf += dec.decode(chunk.value, { stream: true });
+      var lines = buf.split('\n');
+      buf = lines.pop(); // keep partial line for the next read
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();
+        if (!line || line.charAt(0) === ':') continue;       // SSE comment / keep-alive
+        if (line.indexOf('data:') !== 0) continue;
+        var data = line.slice(5).trim();
+        if (data === '[DONE]') { finishLive(bubble, userText); return; }
+        var json;
+        try { json = JSON.parse(data); } catch (_) { continue; }
+        var ch = json.choices && json.choices[0];
+        var delta = (ch && ch.delta && typeof ch.delta.content === 'string')
+          ? ch.delta.content
+          : ((ch && ch.message && ch.message.content) || '');
+        if (delta) {
+          bubble.body.textContent += delta;
+          scrollLog();
+        }
+      }
+    }
+    finishLive(bubble, userText);
+  }
+
+  function finishLive(bubble, userText) {
+    var finalText = bubble.body.textContent;
+    history.push({ role: 'user', content: userText });
+    history.push({ role: 'assistant', content: finalText });
+    trimHistory();
+    // Valuation flow (live path): detect booking agreement and update Panel 3.
+    if (/valuation|appointment|book(ed|ing)?|drop.?off|come in|see you/i.test(userText + ' ' + finalText)
+        && /yes|sure|book|confirm|sounds good|let's do|perfect/i.test(finalText + ' ' + userText)) {
+      var slot = bookViaChat();
+      if (slot) sysNote('CALENDAR UPDATED — VALUATION HOLD ADDED TO BOOKING PANEL');
+    }
+    scrollLog();
+  }
+
+  function respond(userText) {
+    addUserBubble(userText);
+    var cfg = loadSettings();
+    var liveReady = cfg.apiKey && cfg.apiKey.length >= 8 && !offlineMode;
+    if (!liveReady) {
+      if (!cfg.apiKey) enableOffline();
+      scriptedReply(userText);
+      return;
+    }
+    var typing = addTyping();
+    streamChat(cfg, userText).then(function () {
+      typing.remove();
+    }).catch(function () {
+      // network failure / CORS block / bad HTTP status -> labeled offline fallback
+      typing.remove();
+      enableOffline();
+      scriptedReply(userText);
+    });
+  }
+
+  /* ================= Boot ================= */
+
+  renderCalendar();
+  renderPriceWatch();
+  // Deep-link: demo/index.html?tier=starter|growth|fullstack (booth shortcuts + QA harness).
+  // Default Full Stack: show every capability first, then walk tiers down to upsell.
+  var urlTier = null;
+  try { urlTier = new URLSearchParams(location.search).get('tier'); } catch (_) {}
+  setTier(TIER_ORDER.indexOf(urlTier) !== -1 ? urlTier : 'fullstack');
+  syncPopoverFromStorage();
+  if (!(loadSettings().apiKey)) enableOffline();
+
+  // Seed greeting so the kiosk never shows an empty transcript
+  (function greet() {
+    var bubble = addAiBubble();
+    bubble.body.textContent =
+      'Thanks for calling Northside Cards — this is a live demo of our AI receptionist. ' +
+      'Tap a question below or type your own.';
+  })();
+})();
+</script>
+</body>
+</html>
