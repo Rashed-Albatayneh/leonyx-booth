@@ -1151,6 +1151,7 @@
 
   var HISTORY_CAP = 12;
   var history = []; // {role, content}
+  var pending = false; // kiosk guard: one turn in flight at a time
 
   function buildSystemPrompt() {
     return [
@@ -1252,6 +1253,7 @@
       var bubble = addAiBubble();
       bubble.body.textContent = text;
       history.push({ role: 'assistant', content: text });
+      pending = false;
       trimHistory();
 
       // Valuation flow writes into Panel 3 calendar state
@@ -1286,8 +1288,11 @@
       .concat(history)
       .concat([{ role: 'user', content: userText }]);
 
+    var ctrl = new AbortController();
+    var stall = window.setTimeout(function () { ctrl.abort(); }, 20000);
     var res = await fetch(baseUrl + '/chat/completions', {
       method: 'POST',
+      signal: ctrl.signal,
       headers: headers,
       body: JSON.stringify({
         model: cfg.model || 'openai/gpt-4o-mini',
@@ -1309,6 +1314,7 @@
 
     while (true) {
       var chunk = await reader.read();
+      window.clearTimeout(stall); stall = window.setTimeout(function () { ctrl.abort(); }, 15000);
       if (chunk.done) break;
       buf += dec.decode(chunk.value, { stream: true });
       var lines = buf.split('\n');
@@ -1318,7 +1324,7 @@
         if (!line || line.charAt(0) === ':') continue;       // SSE comment / keep-alive
         if (line.indexOf('data:') !== 0) continue;
         var data = line.slice(5).trim();
-        if (data === '[DONE]') { finishLive(bubble, userText); return; }
+        if (data === '[DONE]') { window.clearTimeout(stall); finishLive(bubble, userText); return; }
         var json;
         try { json = JSON.parse(data); } catch (_) { continue; }
         var ch = json.choices && json.choices[0];
@@ -1331,6 +1337,7 @@
         }
       }
     }
+    window.clearTimeout(stall);
     finishLive(bubble, userText);
   }
 
@@ -1351,6 +1358,8 @@
   }
 
   function respond(userText) {
+    if (pending) return; // kiosk: chip spam / double-submit ignored mid-turn
+    pending = true;
     addUserBubble(userText);
     var cfg = loadSettings();
     var liveReady = cfg.apiKey && cfg.apiKey.length >= 8 && !offlineMode;
@@ -1362,10 +1371,12 @@
     var typing = addTyping();
     streamChat(cfg, userText).then(function () {
       typing.remove();
+      pending = false;
     }).catch(function () {
-      // network failure / CORS block / bad HTTP status -> labeled offline fallback
+      // network failure / CORS block / timeout / mid-stream stall -> labeled offline fallback
       typing.remove();
       enableOffline();
+      pending = false;
       scriptedReply(userText);
     });
   }
