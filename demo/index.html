@@ -614,6 +614,82 @@
     color: var(--ink-soft); margin-top: 6px; display: block;
   }
 
+  /* ============ Lead capture CTA ============ */
+  .lead-cta {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    z-index: 30;
+    appearance: none;
+    border: 0;
+    background: var(--accent);
+    color: var(--on-accent);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-weight: 600;
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 14px 18px;
+    min-height: 48px;
+    border-radius: 999px;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+    cursor: pointer;
+    transition: background var(--dur-fast) var(--ease-snap), transform var(--dur-fast) var(--ease-snap);
+  }
+  .lead-cta:hover { background: var(--accent-strong); }
+  .lead-cta:active { transform: scale(0.97); }
+  #leadPopover {
+    display: none;
+    position: fixed;
+    right: 18px;
+    bottom: 78px;
+    z-index: 40;
+    width: min(340px, calc(100vw - 36px));
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 16px 40px var(--shadow);
+    padding: 16px;
+  }
+  #leadPopover.open { display: block; }
+  #leadPopover .lead-x {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    appearance: none;
+    background: transparent;
+    border: 0;
+    color: var(--ink-soft);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px 6px;
+  }
+  #leadPopover input {
+    width: 100%;
+    font-size: 16px;
+    padding: 11px 12px;
+    min-height: 44px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--ink);
+  }
+  #leadPopover input.lead-missing { border-color: var(--warn); }
+  #leadPopover .lead-submit { width: 100%; }
+  #leadPopover .lead-note {
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+    margin: 10px 0 0;
+    line-height: 1.45;
+  }
+  .lead-thanks {
+    font-size: 0.95rem;
+    color: var(--ok);
+    font-weight: 600;
+    margin: 4px 0;
+  }
   /* ============ Footer ============ */
   footer.disclaimer {
     border-top: 1px solid var(--border);
@@ -802,6 +878,22 @@
 
 </main>
 
+
+<button type="button" class="lead-cta" id="leadBtn" aria-haspopup="dialog" aria-expanded="false">Want this for your shop?</button>
+<div id="leadPopover" role="dialog" aria-label="Request a callback">
+  <button type="button" class="lead-x" id="leadClose" aria-label="Close">✕</button>
+  <p class="mono-label" style="margin:0 0 8px;">Request a callback</p>
+  <form id="leadForm" autocomplete="off" novalidate>
+    <input type="text" id="leadName" placeholder="Your name *" aria-label="Your name (required)">
+    <input type="text" id="leadShop" placeholder="Shop name" aria-label="Shop name (optional)">
+    <input type="text" id="leadContact" placeholder="Phone or email *" aria-label="Phone or email (required)">
+    <button type="submit" class="btn-send lead-submit">REQUEST CALLBACK</button>
+    <p class="lead-note">Your info goes to Rashed at Leonyx — the real business behind this demo. It is not shared with the fictional &ldquo;Northside Cards&rdquo;.</p>
+  </form>
+  <div id="leadThanks" hidden>
+    <p class="lead-thanks">✓ Got it — Rashed will reach out after the show.</p>
+  </div>
+</div>
 <footer class="disclaimer">
   <p>Demo simulation — not connected to any shop&rsquo;s live inventory, phone lines, or social accounts.</p>
 </footer>
@@ -1397,6 +1489,57 @@
     if (document.visibilityState === 'visible' && !wakeLock) requestWakeLock();
   });
   requestWakeLock();
+  /* ================= Lead capture (real Leonyx intake) =================
+     Posts to the SAME Google Form the booth deck uses (name/shop/contact).
+     no-cors fire-and-forget: Google Forms sends no CORS headers, so success
+     is optimistic locally — identical tradeoff to the deck’s proven form. */
+  var leadBtn = document.getElementById('leadBtn');
+  var leadPop = document.getElementById('leadPopover');
+  var leadForm = document.getElementById('leadForm');
+  var leadThanks = document.getElementById('leadThanks');
+  var GFORM_ACTION = 'https://docs.google.com/forms/d/e/1FAIpQLScRVo6EsdXJviLfZI07AiQTeMkGuw15sYPlUrvh2YiJUULKVA/formResponse';
+  var GFORM_FIELDS = { name: 'entry.2115807684', shop: 'entry.1391559499', contact: 'entry.1419862675' };
+
+  function leadOpen(open) {
+    leadPop.classList.toggle('open', open);
+    leadBtn.setAttribute('aria-expanded', String(open));
+    if (open) {
+      /* fresh form only after a completed submit; mid-typing edits survive an accidental close */
+      if (!leadThanks.hidden) { leadForm.reset(); leadForm.hidden = false; leadThanks.hidden = true; }
+    }
+  }
+  leadBtn.addEventListener('click', function () {
+    leadOpen(!leadPop.classList.contains('open'));
+  });
+  document.getElementById('leadClose').addEventListener('click', function () { leadOpen(false); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') leadOpen(false);
+  });
+  document.addEventListener('click', function (e) {
+    if (!leadPop.classList.contains('open')) return;
+    if (leadPop.contains(e.target) || leadBtn.contains(e.target)) return;
+    leadOpen(false);
+  });
+  leadForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = document.getElementById('leadName').value.trim();
+    var shop = document.getElementById('leadShop').value.trim();
+    var contact = document.getElementById('leadContact').value.trim();
+    var missing = false;
+    [['leadName', name], ['leadContact', contact]].forEach(function (pair) {
+      var fld = document.getElementById(pair[0]);
+      fld.classList.toggle('lead-missing', !pair[1]);
+      if (!pair[1]) missing = true;
+    });
+    if (missing) return;
+    var body = new URLSearchParams();
+    body.set(GFORM_FIELDS.name, name);
+    body.set(GFORM_FIELDS.shop, shop);
+    body.set(GFORM_FIELDS.contact, contact);
+    fetch(GFORM_ACTION, { method: 'POST', mode: 'no-cors', body: body }).catch(function () {});
+    leadForm.hidden = true;
+    leadThanks.hidden = false;
+  });
   /* ================= Boot ================= */
 
   renderCalendar();

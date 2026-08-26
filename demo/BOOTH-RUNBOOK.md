@@ -70,3 +70,9 @@ Then check https://rashed-albatayneh.github.io/leonyx-booth/demo/ renders
 - **QR table card:** print `demo/BOOTH-QR-CARD.html` (A6 landscape table-tent size)
   alongside `demo/qr-leonyx-demo.png`. Prospects scan and try the demo on their own
   phones — the URL points at the published live site.
+- **Leave-behind flyer:** print `demo/LEAVE-BEHIND.html` (A5 portrait). Tier recap,
+  QR, honest-label fineprint. Give one to every serious conversation.
+- **Lead capture in the demo:** the gold "Want this for your shop?" button (bottom
+  right) takes name + shop + phone/email and quietly delivers it to the SAME Google
+  Sheet as the deck's lead form. Leads submitted from prospect phones via the QR also
+  land there. Check the sheet Friday night and follow up Saturday.

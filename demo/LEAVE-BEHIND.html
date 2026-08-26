@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Leonyx — Leave-Behind (A5)</title>
+<style>
+  @page { size: A5 portrait; margin: 8mm; }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font-family: Georgia, "Times New Roman", serif;
+    background: #efe9da;
+    color: #211c14;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 12px;
+  }
+  .sheet {
+    width: 138mm;   /* A5 minus margin */
+    min-height: 194mm;
+    background: #12100c;
+    border-radius: 16px;
+    border: 1px solid #34291a;
+    padding: 11mm 10mm;
+    display: flex;
+    flex-direction: column;
+    gap: 6mm;
+    position: relative;
+  }
+  .sheet::after {
+    content: "";
+    position: absolute;
+    inset: 3.5mm;
+    border: 1px solid rgba(212,169,74,.32);
+    border-radius: 11px;
+    pointer-events: none;
+  }
+  .kicker {
+    font-family: "Courier New", monospace;
+    font-size: 7.5pt;
+    letter-spacing: .24em;
+    color: #d4a94a;
+    text-transform: uppercase;
+  }
+  h1 {
+    font-size: 21pt;
+    line-height: 1.05;
+    color: #f3ede0;
+    text-transform: uppercase;
+  }
+  h1 span { color: #d4a94a; }
+  .lede { font-size: 9.5pt; line-height: 1.5; color: #cfc6b2; }
+  .tiers { display: grid; gap: 3.5mm; }
+  .tier {
+    background: #1c1812;
+    border: 1px solid #34291a;
+    border-left: 2.5px solid #d4a94a;
+    border-radius: 8px;
+    padding: 4mm 5mm;
+  }
+  .tier .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 4mm;
+  }
+  .tier .name {
+    font-family: "Courier New", monospace;
+    font-weight: bold;
+    font-size: 9.5pt;
+    letter-spacing: .14em;
+    color: #f0c766;
+    text-transform: uppercase;
+  }
+  .tier .price {
+    font-family: "Courier New", monospace;
+    font-weight: bold;
+    font-size: 12pt;
+    color: #f3ede0;
+    white-space: nowrap;
+  }
+  .tier .price small { display: block; font-size: 6.5pt; color: #a89d86; letter-spacing: .08em; text-align: right; }
+  .tier ul { margin: 2.5mm 0 0; padding-left: 5mm; }
+  .tier li { font-size: 8.5pt; line-height: 1.55; color: #cfc6b2; }
+  .tier li b { color: #f3ede0; }
+  .tier .was {
+    font-family: "Courier New", monospace;
+    font-size: 6.5pt;
+    color: #a89d86;
+    letter-spacing: .06em;
+    margin-top: 2mm;
+    text-transform: uppercase;
+  }
+  .bottom {
+    margin-top: auto;
+    display: grid;
+    grid-template-columns: 30mm 1fr;
+    gap: 6mm;
+    align-items: center;
+    border-top: 1px dashed #34291a;
+    padding-top: 5mm;
+  }
+  .bottom img { width: 100%; display: block; background: #fbf6ea; border-radius: 6px; padding: 1.5mm; }
+  .contact { display: grid; gap: 1.5mm; }
+  .contact .cta { font-size: 10.5pt; color: #f3ede0; line-height: 1.3; }
+  .contact .cta b { color: #d4a94a; }
+  .contact .mono {
+    font-family: "Courier New", monospace;
+    font-size: 7.5pt;
+    letter-spacing: .1em;
+    color: #cfc6b2;
+    text-transform: uppercase;
+    line-height: 1.8;
+  }
+  .fineprint {
+    font-family: "Courier New", monospace;
+    font-size: 5.8pt;
+    letter-spacing: .05em;
+    color: #7c7462;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+  <div class="sheet">
+    <div>
+      <div class="kicker">Leonyx · AI Systems For Small Business</div>
+      <h1>Your shop's front desk,<br><span>answered by AI.</span></h1>
+      <p class="lede">An AI phone receptionist trained on <b>your</b> inventory and process.
+        It answers buylist questions with real prices, explains PSA drop-offs,
+        and books valuations — while you're at the counter or asleep.</p>
+    </div>
+
+    <div class="tiers">
+      <div class="tier">
+        <div class="head"><span class="name">Starter</span><span class="price">$997<small>ONE-TIME</small></span></div>
+        <ul>
+          <li><b>AI phone receptionist</b> trained on your buylist, grading intake &amp; hours</li>
+          <li>Answers live, 24/7 — no hold music, no missed sell opportunities</li>
+          <li>2-week support included</li>
+        </ul>
+      </div>
+      <div class="tier">
+        <div class="head"><span class="name">Growth</span><span class="price">$1,497<small>ONE-TIME</small></span></div>
+        <ul>
+          <li>Everything in Starter</li>
+          <li><b>Website redesign &amp; SEO</b> — found on page one, fast on mobile</li>
+          <li><b>Booking system integration</b> — valuations land on your calendar</li>
+          <li>30-day support included</li>
+        </ul>
+      </div>
+      <div class="tier">
+        <div class="head"><span class="name">Full Stack</span><span class="price">$1,997<small>ONE-TIME</small></span></div>
+        <ul>
+          <li>Everything in Growth</li>
+          <li><b>Automated SMS reminders</b> — no-shows drop sharply</li>
+          <li><b>Price watch + auto-posting</b> — market swings tracked, arrivals posted while you sleep</li>
+          <li>60-day priority support · custom integrations</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="bottom">
+      <img src="qr-leonyx-demo.png" alt="Scan to try the live demo">
+      <div class="contact">
+        <div class="cta"><b>Tried it at the booth?</b><br>Scan again anytime — the demo stays live.</div>
+        <div class="mono">
+          Rashed · Leonyx<br>
+          No subscription. You pay once,<br>
+          we build it, you own it.
+        </div>
+      </div>
+    </div>
+
+    <div class="fineprint">Interactive demo is a simulation — not connected to any shop's live inventory, phones, or socials. Prices shown are one-time project fees.</div>
+  </div>
+</body>
+</html>
