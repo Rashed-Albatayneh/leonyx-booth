@@ -63,6 +63,13 @@ Then check https://rashed-albatayneh.github.io/leonyx-booth/demo/ renders
 
     git revert <merge-commit-sha> && git push origin main
 
+## Day-of checklist (60 seconds, at the table)
+1. Double-click the file — greeting bubble shows; OFFLINE MODE banner is normal
+2. Tap each scenario chip once — three answers appear
+3. Switch tiers Starter → Growth → Full Stack — panels lock/unlock
+4. Paste your OpenRouter key in ⚙ SETTINGS, tap Charizard — confirm a live answer streams
+5. QR card + a stack of leave-behinds on the table, demo open on the tablet, charger plugged in
+
 ## Extras included
 - **Screen stays awake:** the demo holds a screen wake-lock while visible, so a booth
   tablet/laptop won't dim mid-pitch. Needs no setup; silently skips itself on browsers
