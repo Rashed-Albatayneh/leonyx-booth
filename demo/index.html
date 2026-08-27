@@ -586,6 +586,74 @@
   .spark polyline { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
   .spark .area { fill: url(#sparkFill); stroke: none; opacity: 0.55; }
 
+  .live-badge {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--ok);
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .live-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--ok);
+    flex: 0 0 auto;
+    animation: livepulse 1.6s infinite var(--ease-glide);
+  }
+  @keyframes livepulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+  .live-badge.is-reconnecting { color: var(--warn); }
+  .live-badge.is-reconnecting .live-dot { background: var(--warn); animation: none; opacity: 1; }
+
+  .inv-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .inv-toolbar label {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .inv-toolbar select {
+    font-size: 0.82rem;
+    padding: 8px 10px;
+    min-height: 40px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--ink);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+  }
+  .inv-toolbar .btn-ghost { padding: 0 12px; min-height: 40px; font-size: 0.74rem; }
+  .inv-status {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.7rem;
+    color: var(--ink-soft);
+    margin: 0 0 12px;
+  }
+  .inv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 560px) { .inv-grid { grid-template-columns: 1fr; } }
+  .inv-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    min-width: 0;
+  }
+  .inv-card h4 { margin: 0; font-size: 0.86rem; font-weight: 600; }
+  .inv-card .sub { font-size: 0.72rem; color: var(--ink-soft); margin: 1px 0 6px; }
+  .inv-row { display: flex; align-items: flex-end; gap: 8px; flex-wrap: wrap; }
+  .inv-price { font-family: "IBM Plex Mono", ui-monospace, monospace; font-weight: 600; font-size: 0.95rem; }
+  .inv-price.is-stale { color: var(--ink-soft); }
+
   .ig-card {
     margin-top: 12px;
     border: 1px solid var(--border);
@@ -876,6 +944,37 @@
     </div>
   </section>
 
+  <!-- ============ PANEL 5 — LIVE INVENTORY VALUE TRACKER (Full Stack only) ============ -->
+  <section class="panel" id="panelInventory" aria-labelledby="h-inv">
+    <div class="panel-head">
+      <h2 id="h-inv">Live Inventory Value Tracker</h2>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="live-badge" id="invLiveBadge"><span class="live-dot" aria-hidden="true"></span>LIVE DATA · api.pokemontcg.io</span>
+        <span class="tier-chip">FULL STACK</span>
+      </div>
+    </div>
+    <div class="lock-row">
+      <span class="lock-icon" aria-hidden="true">🔒</span>
+      <span><b>Included in Full Stack +$1,000</b> — real-time inventory valuation unlocks here.</span>
+    </div>
+    <div class="panel-body">
+      <div class="inv-toolbar">
+        <label for="invInterval">Refresh every</label>
+        <select id="invInterval">
+          <option value="3600000">1 hour</option>
+          <option value="21600000">6 hours</option>
+          <option value="43200000">12 hours</option>
+          <option value="86400000" selected>24 hours (default)</option>
+          <option value="172800000">48 hours</option>
+          <option value="0">Manual only</option>
+        </select>
+        <button type="button" class="btn-ghost" id="invRefreshNow">REFRESH NOW</button>
+      </div>
+      <p class="inv-status" id="invStatus">Fetching live prices…</p>
+      <div class="inv-grid" id="invGrid"><!-- built by JS from a real live API fetch --></div>
+    </div>
+  </section>
+
 </main>
 
 
@@ -946,11 +1045,13 @@
 
   var els = {};
   ['tierSwitcher','panelReceptionist','panelWebsite','panelBooking','panelPriceWatch',
+   'panelInventory',
    'chatLog','chatForm','chatInput','btnSend','btnSettings','settingsPopover',
    'llmProvider','llmBaseUrl','llmModel','llmApiKey','saveSettings','clearKey',
    'closeSettings','settingsStatus','offlineBanner','closeBanner',
    'baWrap','baToggleBefore','baToggleAfter','baCaption',
-   'calWeek','smsBlockFullStack','smsBlockLocked','pwGrid'
+   'calWeek','smsBlockFullStack','smsBlockLocked','pwGrid',
+   'invGrid','invStatus','invInterval','invRefreshNow','invLiveBadge'
   ].forEach(function (id) {
     els[id] = document.getElementById(id);
   });
@@ -966,6 +1067,7 @@
     els.panelWebsite.classList.toggle('is-locked', !growthPlus);
     els.panelBooking.classList.toggle('is-locked', !growthPlus);
     els.panelPriceWatch.classList.toggle('is-locked', !fullPlus);
+    els.panelInventory.classList.toggle('is-locked', !fullPlus);
 
     // SMS reminder bubbles: Full Stack ONLY (mini-lock inside the calendar panel)
     els.smsBlockFullStack.style.display = fullPlus ? '' : 'none';
@@ -1111,6 +1213,193 @@
       card.appendChild(h); card.appendChild(sub); card.appendChild(row); card.appendChild(svg);
       els.pwGrid.appendChild(card);
     });
+  }
+
+  /* ================= Panel 5 — Live Inventory Value Tracker =================
+     Genuinely live: fetches real card data + real TCGplayer/Cardmarket market
+     prices from the public Pokemon TCG API (api.pokemontcg.io). No API key
+     required for this call volume. The API's search (`q=`) and single-card
+     lookup (`/cards/{id}`) endpoints are unreliable, so this deliberately
+     only ever calls the plain paginated list endpoint (no query params) and
+     filters the returned page down to our seed IDs client-side — verified
+     working directly against the live API while building this panel. */
+
+  var INV_CARDS = [
+    { id: 'ru1-1',    name: 'Venusaur',  set: 'Pokémon Rumble' },
+    { id: 'ex3-1',    name: 'Absol',     set: 'EX Dragon' },
+    { id: 'ex12-1',   name: 'Aerodactyl',set: 'EX Legend Maker' },
+    { id: 'hgss1-1',  name: 'Arcanine',  set: 'HeartGold & SoulSilver' },
+    { id: 'base4-1',  name: 'Alakazam',  set: 'Base Set 2' },
+    { id: 'pl1-1',    name: 'Ampharos',  set: 'Platinum' },
+    { id: 'mcd19-1',  name: 'Caterpie',  set: "McDonald's Collection 2019" },
+    { id: 'hgss4-1',  name: 'Aggron',    set: 'HS—Triumphant' },
+    { id: 'dv1-1',    name: 'Dratini',   set: 'Dragon Vault' },
+    { id: 'det1-1',   name: 'Bulbasaur', set: 'Detective Pikachu' }
+  ];
+  var INV_API_URL = 'https://api.pokemontcg.io/v2/cards?pageSize=50&page=1';
+  var INV_LS_PRICES = 'leonyx.demo.inventory.prices.v1';
+  var INV_LS_INTERVAL = 'leonyx.demo.inventory.interval.v1';
+  var INV_DEFAULT_INTERVAL = 86400000; // 24h
+  var invTimer = null;
+  var invFetchInFlight = false;
+
+  function invLoadCache() {
+    try { return JSON.parse(window.localStorage.getItem(INV_LS_PRICES)) || {}; }
+    catch (_) { return {}; }
+  }
+  function invSaveCache(obj) {
+    try { window.localStorage.setItem(INV_LS_PRICES, JSON.stringify(obj)); } catch (_) {}
+  }
+  function invLoadInterval() {
+    var v = null;
+    try { v = window.localStorage.getItem(INV_LS_INTERVAL); } catch (_) {}
+    return v !== null && v !== '' ? Number(v) : INV_DEFAULT_INTERVAL;
+  }
+  function invSaveInterval(ms) {
+    try { window.localStorage.setItem(INV_LS_INTERVAL, String(ms)); } catch (_) {}
+  }
+
+  function invBestPrice(card) {
+    var tp = (card.tcgplayer && card.tcgplayer.prices) || {};
+    var order = ['holofoil', 'normal', 'reverseHolofoil', '1stEditionHolofoil', 'unlimitedHolofoil'];
+    for (var i = 0; i < order.length; i++) {
+      if (tp[order[i]] && typeof tp[order[i]].market === 'number') return tp[order[i]].market;
+    }
+    var cm = (card.cardmarket && card.cardmarket.prices) || {};
+    if (typeof cm.averageSellPrice === 'number') return cm.averageSellPrice;
+    return null;
+  }
+
+  function invSleep(ms) { return new Promise(function (res) { window.setTimeout(res, ms); }); }
+
+  // The public API is genuinely flaky (intermittent 500/502) — a few quick
+  // retries clears most of them without making the booth screen look broken.
+  async function invFetchWithRetry(attempts) {
+    for (var i = 0; i < attempts; i++) {
+      try {
+        var res = await fetch(INV_API_URL, { cache: 'no-store' });
+        if (res.ok) return await res.json();
+      } catch (_) { /* network error — fall through to retry */ }
+      if (i < attempts - 1) await invSleep(1000 + i * 500); // light backoff: 1.0s, 1.5s, 2.0s...
+    }
+    return null;
+  }
+
+  function invFmtMoney(n) {
+    return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d)\.)/g, ',');
+  }
+  function invFmtAgo(ts) {
+    if (!ts) return 'never';
+    var s = Math.max(0, Math.round((Date.now() - ts) / 1000));
+    if (s < 60) return 'just now';
+    var m = Math.round(s / 60);
+    if (m < 60) return m + 'm ago';
+    var h = Math.round(m / 60);
+    if (h < 48) return h + 'h ago';
+    return Math.round(h / 24) + 'd ago';
+  }
+
+  function invSetStatus(text, reconnecting) {
+    els.invStatus.textContent = text;
+    els.invLiveBadge.classList.toggle('is-reconnecting', !!reconnecting);
+    els.invLiveBadge.lastChild.textContent =
+      (reconnecting ? 'RECONNECTING · showing last known values' : 'LIVE DATA · api.pokemontcg.io');
+  }
+
+  function invRender() {
+    var cache = invLoadCache();
+    els.invGrid.textContent = '';
+    INV_CARDS.forEach(function (seed) {
+      var entry = cache[seed.id];
+      var card = document.createElement('div'); card.className = 'inv-card';
+      var h = document.createElement('h4'); h.textContent = seed.name;
+      var sub = document.createElement('div'); sub.className = 'sub';
+      sub.textContent = seed.set + ' · updated ' + (entry ? invFmtAgo(entry.fetchedAt) : 'never');
+      var row = document.createElement('div'); row.className = 'inv-row';
+      var price = document.createElement('span'); price.className = 'inv-price';
+      if (entry && typeof entry.price === 'number') {
+        price.textContent = invFmtMoney(entry.price);
+      } else {
+        price.textContent = '—';
+        price.classList.add('is-stale');
+      }
+      row.appendChild(price);
+      if (entry && typeof entry.prevPrice === 'number' && entry.prevPrice !== entry.price) {
+        var pct = ((entry.price - entry.prevPrice) / entry.prevPrice) * 100;
+        var delta = document.createElement('span');
+        delta.className = 'delta ' + (pct >= 0 ? 'up' : 'down');
+        delta.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%';
+        row.appendChild(delta);
+      }
+      card.appendChild(h); card.appendChild(sub); card.appendChild(row);
+      els.invGrid.appendChild(card);
+    });
+  }
+
+  async function invRefresh() {
+    if (invFetchInFlight) return;
+    invFetchInFlight = true;
+    invSetStatus('Refreshing live prices…', false);
+    var data = await invFetchWithRetry(8);
+    invFetchInFlight = false;
+
+    if (!data || !data.data) {
+      invSetStatus('Live feed unreachable right now', true);
+      invRender();
+      return;
+    }
+    var byId = {};
+    data.data.forEach(function (c) { byId[c.id] = c; });
+    var cache = invLoadCache();
+    var now = Date.now();
+    var hits = 0;
+    INV_CARDS.forEach(function (seed) {
+      var live = byId[seed.id];
+      if (!live) return; // not on this page right now — keep last cached value
+      var price = invBestPrice(live);
+      if (price == null) return;
+      hits++;
+      var prev = cache[seed.id];
+      cache[seed.id] = {
+        price: price,
+        prevPrice: prev ? prev.price : null,
+        fetchedAt: now
+      };
+    });
+    invSaveCache(cache);
+    invRender();
+    if (hits > 0) {
+      invSetStatus('Live · last refreshed ' + invFmtAgo(now) + ' · next auto-refresh per interval below', false);
+    } else {
+      invSetStatus('Live feed reachable but seed cards not on this page — showing last known values', true);
+    }
+  }
+
+  function invScheduleNext() {
+    if (invTimer) { window.clearTimeout(invTimer); invTimer = null; }
+    var interval = invLoadInterval();
+    if (!interval) return; // manual only
+    invTimer = window.setTimeout(function () {
+      invRefresh().then(invScheduleNext);
+    }, interval);
+  }
+
+  els.invInterval.addEventListener('change', function () {
+    invSaveInterval(Number(els.invInterval.value));
+    invScheduleNext();
+  });
+  var invRefreshCooldown = false;
+  els.invRefreshNow.addEventListener('click', function () {
+    if (invRefreshCooldown) return;
+    invRefreshCooldown = true;
+    window.setTimeout(function () { invRefreshCooldown = false; }, 10000);
+    invRefresh().then(invScheduleNext);
+  });
+
+  function initInventory() {
+    els.invInterval.value = String(invLoadInterval());
+    invRender();
+    invRefresh().then(invScheduleNext);
   }
 
   /* ================= Panel 2 — before/after wipe ================= */
@@ -1544,6 +1833,7 @@
 
   renderCalendar();
   renderPriceWatch();
+  initInventory();
   // Deep-link: demo/index.html?tier=starter|growth|fullstack (booth shortcuts + QA harness).
   // Default Full Stack: show every capability first, then walk tiers down to upsell.
   var urlTier = null;
