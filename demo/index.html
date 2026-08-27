@@ -188,6 +188,19 @@
     white-space: nowrap;
   }
   .panel-body { padding: 16px 18px 18px; }
+  .pain-note {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    line-height: 1.45;
+    border-left: 2px solid var(--accent);
+    padding: 2px 0 2px 10px;
+    margin: 0 0 14px;
+  }
+  .pain-note b { color: var(--ink); font-weight: 600; }
+  .pain-note sup { color: var(--accent); font-size: 0.72em; }
 
   /* Dimmed locked upsell state */
   section.panel.is-locked .panel-head h2 { color: var(--ink-soft); }
@@ -805,6 +818,7 @@
       <button type="button" id="closeBanner" aria-label="Dismiss offline banner">✕</button>
     </div>
     <div class="panel-body">
+      <p class="pain-note"><b>62% of shop calls go unanswered</b> — and 82% of callers won&rsquo;t leave a voicemail, they&rsquo;ll just call the next shop.<sup>1</sup></p>
       <div class="chat-log" id="chatLog" aria-live="polite"></div>
       <div class="chips" aria-label="Sample caller questions">
         <button type="button" class="chip" data-scenario="buylist">&ldquo;What are you paying for a Charizard?&rdquo;</button>
@@ -856,6 +870,7 @@
       <span><b>Included in Growth +$500</b> — before/after redesign preview unlocks here.</span>
     </div>
     <div class="panel-body">
+      <p class="pain-note"><b>97% of buyers check a shop&rsquo;s online presence before they ever walk in</b> — no site or a dead one, no visit.<sup>2</sup></p>
       <div class="ba-toggle" role="group" aria-label="Before or after view">
         <button type="button" id="baToggleBefore" aria-pressed="true">BEFORE</button>
         <button type="button" id="baToggleAfter" aria-pressed="false">AFTER</button>
@@ -901,6 +916,7 @@
       <span><b>Included in Growth +$500</b> — valuation calendar integration unlocks here.</span>
     </div>
     <div class="panel-body">
+      <p class="pain-note">Phone-only booking takes <b>8.7 minutes per call</b> and shows up 3.2&times; less often than an online-booked slot — automated reminders alone cut no-shows up to 50%.<sup>3</sup></p>
       <p class="mono-label" style="margin-bottom:8px;">Week of Aug 31 – Sep 4 · Valuation Appointments</p>
       <div class="cal-week" id="calWeek"><!-- built by JS (deterministic) --></div>
       <div class="sms-block" id="smsBlockFullStack" style="display:none;">
@@ -933,6 +949,7 @@
       <span><b>Included in Full Stack +$1,000</b> — market monitoring dashboard unlocks here.</span>
     </div>
     <div class="panel-body">
+      <p class="pain-note">Card prices move daily. Shops that reprice by hand instead of against the live market <b>bleed margin on every sale</b> they&rsquo;re slow to catch.<sup>4</sup></p>
       <div class="pw-grid" id="pwGrid"><!-- built by JS (seeded) --></div>
       <div class="ig-card">
         <div class="ig-img">Northside Cards</div>
@@ -958,6 +975,7 @@
       <span><b>Included in Full Stack +$1,000</b> — real-time inventory valuation unlocks here.</span>
     </div>
     <div class="panel-body">
+      <p class="pain-note">This is the same live market feed your pricing decisions should run on — <b>updated automatically</b>, never left to whoever remembered to check TCGplayer that morning.</p>
       <div class="inv-toolbar">
         <label for="invInterval">Refresh every</label>
         <select id="invInterval">
@@ -995,6 +1013,7 @@
 </div>
 <footer class="disclaimer">
   <p>Demo simulation — not connected to any shop&rsquo;s live inventory, phone lines, or social accounts.</p>
+  <p style="margin-top:6px;font-size:0.62rem;opacity:0.75;">Panel stats: 1. DaVinci Virtual / Dialzara / Aira, missed-call cost studies, 2026 · 2. BrightLocal Local Consumer Review Survey, 2026 · 3. SchedulingKit online booking &amp; no-show data, 2026 · 4. TCG Sync inventory management guide, 2026</p>
 </footer>
 
 <script>
