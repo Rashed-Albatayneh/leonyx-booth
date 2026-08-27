@@ -1227,16 +1227,16 @@
     <div class="panel-head">
       <h2 id="h-ev">Event &amp; Tournament Management</h2>
       <div style="display:flex;gap:8px;align-items:center;">
-        <span class="sim-badge">SIMULATED EVENT DATA</span>
+        <span class="sim-badge">REAL SHOW DATE · AUTOMATION SIMULATED</span>
         <span class="tier-chip">GROWTH+</span>
       </div>
     </div>
     <div class="lock-row">
       <span class="lock-icon" aria-hidden="true">🔒</span>
-      <span><b>Included in Growth +$500</b> — automated event signup &amp; payouts unlock here.</span>
+      <span><b>Included in Growth +$500</b> — automated event promotion &amp; signup unlock here.</span>
     </div>
     <div class="panel-body">
-      <p class="pain-note">Paper signup sheets mean guessed headcounts, hand-counted cash, and payout math done at 11pm.</p>
+      <p class="pain-note">Paper signup sheets and hand-typed social posts mean a show announcement that goes out late, or not at all.</p>
       <div class="event-card" id="eventCard"><!-- built by JS (seeded) --></div>
     </div>
   </section>
@@ -1825,19 +1825,18 @@
     renderSubmissionResult(id);
   });
 
-  // Panel 10 — Events
+  // Panel 10 — Events. Real show, real dates — the automation numbers around
+  // it (reminders sent, RSVPs) are the simulated illustration, not the show itself.
   function renderEvent() {
     els.eventCard.innerHTML =
-      '<h4>Friday Night Standard</h4>' +
-      '<div class="sub">Fri Sep 4 · 6:00 PM · $5 entry</div>' +
-      '<div class="event-fill-track"><div class="event-fill" style="width:87.5%"></div></div>' +
-      '<div class="sub" style="margin-top:6px;">14 / 16 slots filled — auto-closes signup at capacity</div>' +
-      '<div class="payout-row">' +
-        '<span>Entry pool<b>$70</b></span>' +
-        '<span>1st<b>$35</b></span>' +
-        '<span>2nd<b>$21</b></span>' +
-        '<span>3rd<b>$14</b></span>' +
-      '</div>';
+      '<h4>Northside TCG Expo</h4>' +
+      '<div class="sub">Sat Aug 29 &ndash; Sun Aug 30 · 12:00 PM &ndash; 7:00 PM · 2-Day Expo</div>' +
+      '<div class="mini-stats" style="margin-top:10px;">' +
+        '<div class="mini-stat"><div class="v">2</div><div class="l">Show days</div></div>' +
+        '<div class="mini-stat"><div class="v">43</div><div class="l">Customers RSVP&rsquo;d to visit booth</div></div>' +
+        '<div class="mini-stat"><div class="v">3d</div><div class="l">Before-show reminder auto-sent</div></div>' +
+      '</div>' +
+      '<div class="sub" style="margin-top:10px;">Auto-announced across email &amp; social the moment the booth was confirmed &mdash; no copy-pasting the same post three times.</div>';
   }
 
   // Panel 11 — Multi-platform sync
