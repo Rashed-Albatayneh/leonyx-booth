@@ -771,6 +771,145 @@
     font-weight: 600;
     margin: 4px 0;
   }
+  /* ============ Shared: mini stats, mini form (panels 6-13) ============ */
+  .mini-stats { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+  .mini-stat {
+    flex: 1 1 100px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    min-width: 0;
+  }
+  .mini-stat .v { font-family: "Big Shoulders Display", ui-sans-serif, sans-serif; font-weight: 800; font-size: 1.3rem; }
+  .mini-stat .l { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.62rem; letter-spacing: 0.06em; color: var(--ink-soft); text-transform: uppercase; margin-top: 2px; }
+
+  .field-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .field-row input[type="text"] {
+    flex: 1 1 160px;
+    min-width: 0;
+    font-size: 16px;
+    padding: 10px 12px;
+    min-height: 44px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+  .field-row input::placeholder { color: var(--ink-soft); }
+
+  .alert-log { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
+  .alert-log li {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.84rem;
+  }
+  .alert-log .a-time {
+    display: block;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.6rem; letter-spacing: 0.07em; color: var(--ink-soft); margin-top: 3px;
+  }
+
+  /* ============ Panel 8: loyalty punch card ============ */
+  .punch-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .punch {
+    width: 34px; height: 34px; border-radius: 50%;
+    border: 1px dashed var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem;
+  }
+  .punch.filled { background: var(--accent); border-style: solid; border-color: var(--accent); color: var(--on-accent); }
+  .reward-line { margin-top: 12px; font-size: 0.9rem; }
+  .reward-line b { color: var(--accent-strong); }
+
+  /* ============ Panel 9: submission status ============ */
+  .stage-track { display: flex; align-items: center; margin-top: 14px; }
+  .stage {
+    flex: 1;
+    text-align: center;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+    position: relative;
+    padding-top: 18px;
+  }
+  .stage::before {
+    content: ''; position: absolute; top: 5px; left: 50%; transform: translateX(-50%);
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--surface-2); border: 2px solid var(--border);
+  }
+  .stage.done::before { background: var(--ok); border-color: var(--ok); }
+  .stage.current::before { background: var(--accent); border-color: var(--accent); }
+  .stage.current { color: var(--accent-strong); font-weight: 600; }
+  .stage-track::after { content: none; }
+  .stage-bar { height: 2px; background: var(--border); margin: 0 -2px 4px; position: relative; top: 5px; }
+  .stage-bar-fill { height: 100%; background: var(--ok); }
+
+  /* ============ Panel 10: events ============ */
+  .event-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-top: 12px; }
+  .event-card h4 { margin: 0 0 4px; font-size: 0.94rem; }
+  .event-card .sub { font-size: 0.76rem; color: var(--ink-soft); margin-bottom: 8px; }
+  .event-fill-track { height: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
+  .event-fill { height: 100%; background: var(--accent); }
+  .payout-row { display: flex; gap: 14px; margin-top: 10px; flex-wrap: wrap; font-size: 0.8rem; }
+  .payout-row span b { color: var(--accent-strong); display: block; font-family: "IBM Plex Mono", ui-monospace, monospace; }
+
+  /* ============ Panel 11: platform sync ============ */
+  .sync-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
+  @media (max-width: 560px) { .sync-grid { grid-template-columns: 1fr; } }
+  .sync-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .sync-card .name { font-weight: 600; font-size: 0.88rem; }
+  .sync-card .status { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.62rem; letter-spacing: 0.06em; color: var(--ok); display: flex; align-items: center; gap: 5px; }
+  .sync-card .status .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); }
+
+  /* ============ Panel 12: buylist calculator ============ */
+  .calc-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
+  .calc-row select {
+    flex: 1 1 200px;
+    font-size: 16px;
+    padding: 10px 12px;
+    min-height: 44px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--ink);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+  }
+  .calc-out { margin-top: 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .calc-out .offer { font-family: "Big Shoulders Display", ui-sans-serif, sans-serif; font-weight: 800; font-size: 1.6rem; }
+  .calc-out .script { font-size: 0.84rem; color: var(--ink-soft); margin-top: 6px; }
+
+  /* ============ Panel 13: authenticity pre-check ============ */
+  .auth-layout { display: flex; gap: 14px; margin-top: 12px; flex-wrap: wrap; }
+  .auth-thumb {
+    flex: 0 0 auto; width: 84px; height: 84px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--surface-2) 0%, var(--bg) 100%);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem;
+  }
+  .check-list { list-style: none; margin: 0; padding: 0; flex: 1 1 200px; min-width: 0; display: grid; gap: 6px; }
+  .check-list li { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; }
+  .check-list .ck { flex: 0 0 auto; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.66rem; font-weight: 700; }
+  .check-list .ck.pass { background: var(--ok); color: var(--bg); }
+  .verdict-badge {
+    margin-top: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--ok);
+    border: 1px solid var(--ok);
+    border-radius: 999px;
+    padding: 6px 14px;
+  }
+
   /* ============ Footer ============ */
   footer.disclaimer {
     border-top: 1px solid var(--border);
@@ -993,6 +1132,186 @@
     </div>
   </section>
 
+  <!-- ============ PANEL 6 — REVIEW REQUEST AUTOMATION (Growth+) ============ -->
+  <section class="panel" id="panelReviews" aria-labelledby="h-rev">
+    <div class="panel-head">
+      <h2 id="h-rev">Review Request Automation</h2>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="sim-badge">SIMULATED — NO REAL SMS/EMAIL SENT</span>
+        <span class="tier-chip">GROWTH+</span>
+      </div>
+    </div>
+    <div class="lock-row">
+      <span class="lock-icon" aria-hidden="true">🔒</span>
+      <span><b>Included in Growth +$500</b> — automatic review requests unlock here.</span>
+    </div>
+    <div class="panel-body">
+      <p class="pain-note">41% of shoppers now <b>always</b> read reviews before buying, up from 29% the year before — and most shops never ask.<sup>5</sup></p>
+      <div class="sms-thread">
+        <div class="sms out">Northside Cards: Thanks for stopping by today! Mind leaving us a quick review? It really helps: northsidecards.example/review<span class="sms-time">SENT · 20 MIN AFTER CHECKOUT</span></div>
+      </div>
+      <div class="mini-stats" id="reviewStats"><!-- built by JS (seeded) --></div>
+    </div>
+  </section>
+
+  <!-- ============ PANEL 7 — INSTANT RESTOCK / WANT-LIST ALERTS (Growth+) ============ -->
+  <section class="panel" id="panelWantlist" aria-labelledby="h-wl">
+    <div class="panel-head">
+      <h2 id="h-wl">Restock &amp; Want-List Alerts</h2>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="sim-badge">SIMULATED — NO REAL ALERTS SENT</span>
+        <span class="tier-chip">GROWTH+</span>
+      </div>
+    </div>
+    <div class="lock-row">
+      <span class="lock-icon" aria-hidden="true">🔒</span>
+      <span><b>Included in Growth +$500</b> — want-list alerts unlock here.</span>
+    </div>
+    <div class="panel-body">
+      <p class="pain-note">A collector hunting one specific card checks back by hand — <b>every visit they don&rsquo;t make is a sale you don&rsquo;t get.</b></p>
+      <form class="field-row" id="wantlistForm" autocomplete="off">
+        <input type="text" id="wantlistName" placeholder="Customer name" aria-label="Customer name">
+        <input type="text" id="wantlistCard" placeholder="Card they want" aria-label="Card wanted">
+        <button type="submit" class="btn-send">NOTIFY ME WHEN IN STOCK</button>
+      </form>
+      <ul class="alert-log" id="wantlistLog"><!-- built by JS (seeded + user adds) --></ul>
+    </div>
+  </section>
+
+  <!-- ============ PANEL 8 — LOYALTY / REWARDS AUTOMATION (Growth+) ============ -->
+  <section class="panel" id="panelLoyalty" aria-labelledby="h-loy">
+    <div class="panel-head">
+      <h2 id="h-loy">Loyalty &amp; Rewards</h2>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="sim-badge">SIMULATED — DEMO CUSTOMER ONLY</span>
+        <span class="tier-chip">GROWTH+</span>
+      </div>
+    </div>
+    <div class="lock-row">
+      <span class="lock-icon" aria-hidden="true">🔒</span>
+      <span><b>Included in Growth +$500</b> — automated loyalty tracking unlocks here.</span>
+    </div>
+    <div class="panel-body">
+      <p class="pain-note">Repeat customers spend more per visit and cost nothing to acquire — <b>most shops have no way to track who&rsquo;s close to a reward.</b></p>
+      <p class="mono-label" style="margin-bottom:4px;">M. Ortiz · Punch Card</p>
+      <div class="punch-grid" id="punchGrid"><!-- built by JS --></div>
+      <p class="reward-line">7 of 10 purchases — <b>3 more for a free booster pack</b>, applied automatically at checkout.</p>
+    </div>
+  </section>
+
+  <!-- ============ PANEL 9 — SUBMISSION STATUS TRACKING (Growth+) ============ -->
+  <section class="panel" id="panelSubmission" aria-labelledby="h-sub">
+    <div class="panel-head">
+      <h2 id="h-sub">Grading Submission Tracker</h2>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="sim-badge">SIMULATED SUBMISSION DATA</span>
+        <span class="tier-chip">GROWTH+</span>
+      </div>
+    </div>
+    <div class="lock-row">
+      <span class="lock-icon" aria-hidden="true">🔒</span>
+      <span><b>Included in Growth +$500</b> — customer-facing status lookup unlocks here.</span>
+    </div>
+    <div class="panel-body">
+      <p class="pain-note">&ldquo;Is my PSA back yet?&rdquo; is a call that could&rsquo;ve gone to a new sale instead.</p>
+      <form class="field-row" id="submissionForm" autocomplete="off">
+        <input type="text" id="submissionId" placeholder="Enter submission ID (try 4471)" aria-label="Submission ID">
+        <button type="submit" class="btn-send">CHECK STATUS</button>
+      </form>
+      <div id="submissionResult"><!-- built by JS on lookup --></div>
+    </div>
+  </section>
+
+  <!-- ============ PANEL 10 — EVENT / TOURNAMENT MANAGEMENT (Growth+) ============ -->
+  <section class="panel" id="panelEvents" aria-labelledby="h-ev">
+    <div class="panel-head">
+      <h2 id="h-ev">Event &amp; Tournament Management</h2>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="sim-badge">SIMULATED EVENT DATA</span>
+        <span class="tier-chip">GROWTH+</span>
+      </div>
+    </div>
+    <div class="lock-row">
+      <span class="lock-icon" aria-hidden="true">🔒</span>
+      <span><b>Included in Growth +$500</b> — automated event signup &amp; payouts unlock here.</span>
+    </div>
+    <div class="panel-body">
+      <p class="pain-note">Paper signup sheets mean guessed headcounts, hand-counted cash, and payout math done at 11pm.</p>
+      <div class="event-card" id="eventCard"><!-- built by JS (seeded) --></div>
+    </div>
+  </section>
+
+  <!-- ============ PANEL 11 — MULTI-PLATFORM INVENTORY SYNC (Full Stack) ============ -->
+  <section class="panel" id="panelSync" aria-labelledby="h-sync">
+    <div class="panel-head">
+      <h2 id="h-sync">Multi-Platform Inventory Sync</h2>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="sim-badge">SIMULATED SYNC STATUS</span>
+        <span class="tier-chip">FULL STACK</span>
+      </div>
+    </div>
+    <div class="lock-row">
+      <span class="lock-icon" aria-hidden="true">🔒</span>
+      <span><b>Included in Full Stack +$1,000</b> — unified inventory sync unlocks here.</span>
+    </div>
+    <div class="panel-body">
+      <p class="pain-note">Marketplace listings should be read-only projections of <b>one master inventory</b> — split across separate systems and you will oversell.<sup>6</sup></p>
+      <div class="sync-grid" id="syncGrid"><!-- built by JS --></div>
+      <div class="mini-stats"><div class="mini-stat"><div class="v">4</div><div class="l">Oversells prevented this month</div></div></div>
+    </div>
+  </section>
+
+  <!-- ============ PANEL 12 — AUTO-GENERATED BUYLIST OFFERS (Full Stack) ============ -->
+  <section class="panel" id="panelBuylist" aria-labelledby="h-buy">
+    <div class="panel-head">
+      <h2 id="h-buy">Auto-Generated Buylist Offers</h2>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="sim-badge">SIMULATED — USES LIVE PRICE FEED</span>
+        <span class="tier-chip">FULL STACK</span>
+      </div>
+    </div>
+    <div class="lock-row">
+      <span class="lock-icon" aria-hidden="true">🔒</span>
+      <span><b>Included in Full Stack +$1,000</b> — instant buy offers unlock here.</span>
+    </div>
+    <div class="panel-body">
+      <p class="pain-note">Guessing a buy price either lowballs a seller who walks, or overpays and <b>eats the margin.</b></p>
+      <div class="calc-row">
+        <select id="buylistCard" aria-label="Choose a card"></select>
+        <button type="button" class="btn-send" id="buylistGo">GET OFFER</button>
+      </div>
+      <div class="calc-out" id="buylistOut" style="display:none;"><!-- built by JS --></div>
+    </div>
+  </section>
+
+  <!-- ============ PANEL 13 — AI PHOTO AUTHENTICITY PRE-CHECK (Full Stack) ============ -->
+  <section class="panel" id="panelAuth" aria-labelledby="h-auth">
+    <div class="panel-head">
+      <h2 id="h-auth">Authenticity Pre-Check</h2>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="sim-badge">SIMULATED — SCRIPTED EXAMPLE, NOT REAL IMAGE ANALYSIS</span>
+        <span class="tier-chip">FULL STACK</span>
+      </div>
+    </div>
+    <div class="lock-row">
+      <span class="lock-icon" aria-hidden="true">🔒</span>
+      <span><b>Included in Full Stack +$1,000</b> — photo pre-check unlocks here.</span>
+    </div>
+    <div class="panel-body">
+      <p class="pain-note">&ldquo;Super fakes&rdquo; are sophisticated enough to pass casual inspection in 2026 &mdash; including forged PSA slabs.<sup>7</sup></p>
+      <div class="auth-layout">
+        <div class="auth-thumb" aria-hidden="true">🃏</div>
+        <ul class="check-list">
+          <li><span class="ck pass">✓</span> Font weight &amp; kerning match reference</li>
+          <li><span class="ck pass">✓</span> Holo pattern consistent with set era</li>
+          <li><span class="ck pass">✓</span> Cardstock texture / light-test pass</li>
+          <li><span class="ck pass">✓</span> Color saturation within range</li>
+        </ul>
+      </div>
+      <span class="verdict-badge">✓ LIKELY AUTHENTIC — CONFIRM WITH LOUPE BEFORE FINAL OFFER</span>
+    </div>
+  </section>
+
 </main>
 
 
@@ -1013,7 +1332,7 @@
 </div>
 <footer class="disclaimer">
   <p>Demo simulation — not connected to any shop&rsquo;s live inventory, phone lines, or social accounts.</p>
-  <p style="margin-top:6px;font-size:0.62rem;opacity:0.75;">Panel stats: 1. DaVinci Virtual / Dialzara / Aira, missed-call cost studies, 2026 · 2. BrightLocal Local Consumer Review Survey, 2026 · 3. SchedulingKit online booking &amp; no-show data, 2026 · 4. TCG Sync inventory management guide, 2026</p>
+  <p style="margin-top:6px;font-size:0.62rem;opacity:0.75;">Panel stats: 1. DaVinci Virtual / Dialzara / Aira, missed-call cost studies, 2026 · 2. BrightLocal Local Consumer Review Survey, 2026 · 3. SchedulingKit online booking &amp; no-show data, 2026 · 4 &amp; 6. TCG Sync inventory management guide, 2026 · 5. BrightLocal review statistics, 2026 · 7. Pokémon TCG counterfeit ("super fake") reporting, 2026</p>
 </footer>
 
 <script>
@@ -1061,16 +1380,22 @@
     sms:       'Included in Full Stack +$500',
     pricewatch:'Included in Full Stack +$1,000'
   };
+  var GROWTH_PANELS = ['panelWebsite', 'panelBooking', 'panelReviews', 'panelWantlist', 'panelLoyalty', 'panelSubmission', 'panelEvents'];
+  var FULLSTACK_PANELS = ['panelPriceWatch', 'panelInventory', 'panelSync', 'panelBuylist', 'panelAuth'];
 
   var els = {};
   ['tierSwitcher','panelReceptionist','panelWebsite','panelBooking','panelPriceWatch',
-   'panelInventory',
+   'panelInventory','panelReviews','panelWantlist','panelLoyalty','panelSubmission',
+   'panelEvents','panelSync','panelBuylist','panelAuth',
    'chatLog','chatForm','chatInput','btnSend','btnSettings','settingsPopover',
    'llmProvider','llmBaseUrl','llmModel','llmApiKey','saveSettings','clearKey',
    'closeSettings','settingsStatus','offlineBanner','closeBanner',
    'baWrap','baToggleBefore','baToggleAfter','baCaption',
    'calWeek','smsBlockFullStack','smsBlockLocked','pwGrid',
-   'invGrid','invStatus','invInterval','invRefreshNow','invLiveBadge'
+   'invGrid','invStatus','invInterval','invRefreshNow','invLiveBadge',
+   'reviewStats','wantlistForm','wantlistName','wantlistCard','wantlistLog',
+   'punchGrid','submissionForm','submissionId','submissionResult',
+   'eventCard','syncGrid','buylistCard','buylistGo','buylistOut'
   ].forEach(function (id) {
     els[id] = document.getElementById(id);
   });
@@ -1083,10 +1408,8 @@
     var growthPlus = idx >= TIER_ORDER.indexOf('growth');
     var fullPlus   = idx >= TIER_ORDER.indexOf('fullstack');
 
-    els.panelWebsite.classList.toggle('is-locked', !growthPlus);
-    els.panelBooking.classList.toggle('is-locked', !growthPlus);
-    els.panelPriceWatch.classList.toggle('is-locked', !fullPlus);
-    els.panelInventory.classList.toggle('is-locked', !fullPlus);
+    GROWTH_PANELS.forEach(function (id) { els[id].classList.toggle('is-locked', !growthPlus); });
+    FULLSTACK_PANELS.forEach(function (id) { els[id].classList.toggle('is-locked', !fullPlus); });
 
     // SMS reminder bubbles: Full Stack ONLY (mini-lock inside the calendar panel)
     els.smsBlockFullStack.style.display = fullPlus ? '' : 'none';
@@ -1420,6 +1743,143 @@
     invRender();
     invRefresh().then(invScheduleNext);
   }
+
+  /* ================= Panels 6-13 — new capability showcase ================= */
+
+  function seeded(id) { return mulberry32(xmur3('leonyx-demo:' + id)()); }
+
+  // Panel 6 — Review Request Automation
+  function renderReviews() {
+    els.reviewStats.innerHTML =
+      '<div class="mini-stat"><div class="v">38</div><div class="l">Requests sent this month</div></div>' +
+      '<div class="mini-stat"><div class="v">24</div><div class="l">Reviews posted</div></div>' +
+      '<div class="mini-stat"><div class="v">4.9★</div><div class="l">Average rating</div></div>';
+  }
+
+  // Panel 7 — Want-list alerts
+  var WANTLIST_SEED = [
+    { who: '3 customers', card: 'Umbreon VMAX Alt Art', when: '2 DAYS AGO' },
+    { who: '1 customer', card: 'Charizard ex Special Illustration Rare', when: '5 DAYS AGO' }
+  ];
+  function renderWantlist() {
+    els.wantlistLog.innerHTML = '';
+    WANTLIST_SEED.forEach(function (e) {
+      var li = document.createElement('li');
+      li.innerHTML = '🔔 Alert sent: <b>' + e.who + '</b> notified — ' + e.card + ' back in stock' +
+        '<span class="a-time">' + e.when + '</span>';
+      els.wantlistLog.appendChild(li);
+    });
+  }
+  els.wantlistForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = els.wantlistName.value.trim();
+    var card = els.wantlistCard.value.trim();
+    if (!name || !card) return;
+    var li = document.createElement('li');
+    li.innerHTML = '✓ Want-list saved for <b>' + name + '</b> — you&rsquo;ll be notified the moment ' + card + ' is back in stock.' +
+      '<span class="a-time">JUST NOW · SIMULATED</span>';
+    els.wantlistLog.insertBefore(li, els.wantlistLog.firstChild);
+    els.wantlistName.value = ''; els.wantlistCard.value = '';
+  });
+
+  // Panel 8 — Loyalty punch card
+  function renderPunchCard() {
+    els.punchGrid.innerHTML = '';
+    for (var i = 0; i < 10; i++) {
+      var p = document.createElement('div');
+      p.className = 'punch' + (i < 7 ? ' filled' : '');
+      p.textContent = i < 7 ? '✓' : '';
+      els.punchGrid.appendChild(p);
+    }
+  }
+
+  // Panel 9 — Submission status tracker
+  var SUBMISSION_STAGES = ['Received', 'Grading', 'QA Review', 'Shipped'];
+  function submissionLookup(id) {
+    var rnd = seeded('submission:' + id);
+    var stageIdx = Math.floor(rnd() * 3) + 1; // land on Grading or QA most often, never brand new
+    var etaDays = 20 + Math.floor(rnd() * 30);
+    return { stageIdx: stageIdx, etaDays: etaDays };
+  }
+  function renderSubmissionResult(id) {
+    var r = submissionLookup(id);
+    var track = document.createElement('div');
+    track.className = 'stage-track';
+    SUBMISSION_STAGES.forEach(function (label, i) {
+      var s = document.createElement('div');
+      s.className = 'stage' + (i < r.stageIdx ? ' done' : i === r.stageIdx ? ' current' : '');
+      s.textContent = label;
+      track.appendChild(s);
+    });
+    var eta = document.createElement('p');
+    eta.className = 'sub'; eta.style.marginTop = '10px'; eta.style.color = 'var(--ink-soft)'; eta.style.fontSize = '0.82rem';
+    eta.textContent = 'Submission #' + id + ' — currently in ' + SUBMISSION_STAGES[r.stageIdx] + ' · est. ' + r.etaDays + ' business days remaining';
+    els.submissionResult.innerHTML = '';
+    els.submissionResult.appendChild(track);
+    els.submissionResult.appendChild(eta);
+  }
+  els.submissionForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var id = els.submissionId.value.trim();
+    if (!id) return;
+    renderSubmissionResult(id);
+  });
+
+  // Panel 10 — Events
+  function renderEvent() {
+    els.eventCard.innerHTML =
+      '<h4>Friday Night Standard</h4>' +
+      '<div class="sub">Fri Sep 4 · 6:00 PM · $5 entry</div>' +
+      '<div class="event-fill-track"><div class="event-fill" style="width:87.5%"></div></div>' +
+      '<div class="sub" style="margin-top:6px;">14 / 16 slots filled — auto-closes signup at capacity</div>' +
+      '<div class="payout-row">' +
+        '<span>Entry pool<b>$70</b></span>' +
+        '<span>1st<b>$35</b></span>' +
+        '<span>2nd<b>$21</b></span>' +
+        '<span>3rd<b>$14</b></span>' +
+      '</div>';
+  }
+
+  // Panel 11 — Multi-platform sync
+  var SYNC_PLATFORMS = ['TCGplayer', 'eBay', 'Shopify', 'In-Store POS'];
+  function renderSync() {
+    els.syncGrid.innerHTML = '';
+    SYNC_PLATFORMS.forEach(function (name) {
+      var c = document.createElement('div'); c.className = 'sync-card';
+      c.innerHTML = '<span class="name">' + name + '</span><span class="status"><span class="dot"></span>SYNCED · JUST NOW</span>';
+      els.syncGrid.appendChild(c);
+    });
+  }
+
+  // Panel 12 — Buylist offer calculator
+  var BUY_PCT = 0.65;
+  function populateBuylistSelect() {
+    els.buylistCard.innerHTML = '';
+    INV_CARDS.concat(PW_CARDS.map(function (c) { return { id: c.id, name: c.name, set: c.grade }; }))
+      .forEach(function (c) {
+        var opt = document.createElement('option');
+        opt.value = c.id; opt.textContent = c.name + ' — ' + c.set;
+        els.buylistCard.appendChild(opt);
+      });
+  }
+  function currentMarketPrice(id) {
+    var cache = invLoadCache();
+    if (cache[id] && typeof cache[id].price === 'number') return cache[id].price;
+    var pw = PW_CARDS.filter(function (c) { return c.id === id; })[0];
+    if (pw) return seededSeries(pw.id, pw.start).slice(-1)[0];
+    return 20; // reasonable fallback if neither feed has this id yet
+  }
+  els.buylistGo.addEventListener('click', function () {
+    var id = els.buylistCard.value;
+    var name = els.buylistCard.options[els.buylistCard.selectedIndex].textContent.split(' — ')[0];
+    var market = currentMarketPrice(id);
+    var offerCash = market * BUY_PCT;
+    var offerCredit = market * (BUY_PCT + 0.1);
+    els.buylistOut.style.display = 'block';
+    els.buylistOut.innerHTML =
+      '<div class="offer">' + invFmtMoney(offerCash) + ' cash</div>' +
+      '<div class="script">or ' + invFmtMoney(offerCredit) + ' store credit · based on today&rsquo;s market price of ' + invFmtMoney(market) + ' for ' + name + '</div>';
+  });
 
   /* ================= Panel 2 — before/after wipe ================= */
 
@@ -1853,6 +2313,12 @@
   renderCalendar();
   renderPriceWatch();
   initInventory();
+  renderReviews();
+  renderWantlist();
+  renderPunchCard();
+  renderEvent();
+  renderSync();
+  populateBuylistSelect();
   // Deep-link: demo/index.html?tier=starter|growth|fullstack (booth shortcuts + QA harness).
   // Default Full Stack: show every capability first, then walk tiers down to upsell.
   var urlTier = null;
