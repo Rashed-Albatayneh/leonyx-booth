@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leonyx — TCG Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&amp;family=Source+Sans+3:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #12100c;
+    --surface: #1c1812;
+    --surface-2: #241e15;
+    --ink: #f3ede0;
+    --ink-soft: #a89d86;
+    --border: #34291a;
+    --accent: #d4a94a;
+    --accent-strong: #f0c766;
+    --accent-soft: rgba(212, 169, 74, 0.14);
+    --on-accent: #16130c;
+    --ok: #7fb069;
+    --warn: #c96f4a;
+    --shadow: rgba(0, 0, 0, 0.4);
+  }
+  * { box-sizing: border-box; }
+  html, body { max-width: 100%; overflow-x: hidden; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    display: flex;
+    min-height: 100vh;
+  }
+  .wordmark { font-family: "Big Shoulders Display", ui-sans-serif, sans-serif; font-weight: 900; letter-spacing: 0.02em; }
+  .mono-label {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--accent); font-size: 0.68rem; margin: 0;
+  }
+
+  /* ============ Sidebar ============ */
+  aside.sidebar {
+    flex: 0 0 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  .sb-brand { padding: 20px 18px 14px; border-bottom: 1px solid var(--border); }
+  .sb-brand .wordmark { font-size: 1.5rem; line-height: 1; }
+  .sb-brand .wordmark .x { color: var(--accent); }
+  .sb-brand .subtitle { font-family: "IBM Plex Mono", monospace; font-size: 0.62rem; letter-spacing: 0.1em; color: var(--ink-soft); text-transform: uppercase; margin-top: 4px; }
+
+  .sb-shop { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--border); }
+  .sb-shop-avatar {
+    width: 34px; height: 34px; border-radius: 50%; flex: 0 0 auto;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Big Shoulders Display", sans-serif; font-weight: 900; color: var(--on-accent); font-size: 1rem;
+  }
+  .sb-shop-name { font-weight: 600; font-size: 0.88rem; }
+  .sb-shop-sub { font-size: 0.68rem; color: var(--ink-soft); }
+
+  nav.sb-nav { flex: 1; padding: 10px 10px; display: flex; flex-direction: column; gap: 2px; }
+  nav.sb-nav button {
+    appearance: none; border: 0; background: transparent; color: var(--ink-soft);
+    text-align: left; padding: 10px 12px; border-radius: 8px;
+    font-size: 0.86rem; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; gap: 10px;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  nav.sb-nav button .ico { font-size: 1rem; flex: 0 0 auto; }
+  nav.sb-nav button:hover { background: var(--surface-2); color: var(--ink); }
+  nav.sb-nav button[aria-current="true"] { background: var(--accent-soft); color: var(--accent-strong); }
+
+  .sb-footer { padding: 12px 18px 16px; border-top: 1px solid var(--border); font-size: 0.66rem; color: var(--ink-soft); line-height: 1.5; }
+
+  /* ============ Main ============ */
+  main.main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  header.topbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    padding: 16px clamp(16px, 3vw, 32px);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky; top: 0; z-index: 5;
+  }
+  .topbar h1 {
+    font-family: "Big Shoulders Display", sans-serif; font-weight: 800; text-transform: uppercase;
+    font-size: 1.5rem; margin: 0; letter-spacing: 0.02em;
+  }
+  .topbar .kicker { font-family: "IBM Plex Mono", monospace; font-size: 0.66rem; color: var(--ink-soft); letter-spacing: 0.08em; margin-top: 2px; }
+  .topbar .clock { font-family: "IBM Plex Mono", monospace; font-size: 0.78rem; color: var(--ink-soft); text-align: right; }
+  .topbar .clock b { color: var(--accent); display: block; font-size: 0.9rem; }
+
+  .content { padding: clamp(16px, 3vw, 32px); flex: 1; }
+  .section { display: none; }
+  .section.active { display: block; }
+  .section-intro { max-width: 72ch; color: var(--ink-soft); font-size: 0.92rem; margin: 0 0 22px; }
+  .section-intro b { color: var(--ink); }
+  .section-intro sup { color: var(--accent); font-size: 0.7em; }
+
+  .widget-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+  @media (max-width: 980px) { .widget-grid { grid-template-columns: minmax(0, 1fr); } }
+  .widget-grid.kpis { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+
+  .widget {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .widget-head {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+    padding: 13px 16px 9px; border-bottom: 1px solid var(--border);
+  }
+  .widget-head h3 {
+    font-family: "Big Shoulders Display", sans-serif; font-weight: 800; text-transform: uppercase;
+    font-size: 1.05rem; margin: 0; letter-spacing: 0.02em;
+  }
+  .widget-body { padding: 14px 16px 16px; }
+  .badge {
+    font-family: "IBM Plex Mono", monospace; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+  .badge.sim { color: var(--warn); }
+  .badge.live { color: var(--ok); display: inline-flex; align-items: center; gap: 5px; }
+  .badge.live .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); animation: pulse 1.6s infinite ease-in-out; }
+  @keyframes pulse { 0%,100% { opacity: .4; } 50% { opacity: 1; } }
+  .badge.live.reconnecting { color: var(--warn); }
+  .badge.live.reconnecting .dot { background: var(--warn); animation: none; }
+
+  /* KPI card */
+  .kpi { padding: 14px; text-align: left; }
+  .kpi .v { font-family: "Big Shoulders Display", sans-serif; font-weight: 900; font-size: 1.7rem; color: var(--accent-strong); line-height: 1; }
+  .kpi .l { font-size: 0.72rem; color: var(--ink-soft); margin-top: 4px; }
+
+  /* ---- shared component styles, reused across widgets ---- */
+  .mini-stats { display: flex; gap: 10px; flex-wrap: wrap; }
+  .mini-stat { flex: 1 1 100px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; min-width: 0; }
+  .mini-stat .v { font-family: "Big Shoulders Display", sans-serif; font-weight: 800; font-size: 1.25rem; }
+  .mini-stat .l { font-family: "IBM Plex Mono", monospace; font-size: 0.6rem; letter-spacing: 0.06em; color: var(--ink-soft); text-transform: uppercase; margin-top: 2px; }
+
+  .field-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .field-row input[type="text"] {
+    flex: 1 1 140px; min-width: 0; font-size: 16px; padding: 9px 11px; min-height: 40px;
+    border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2); color: var(--ink);
+  }
+  .field-row input::placeholder { color: var(--ink-soft); }
+  .btn {
+    appearance: none; border: 0; border-radius: 8px; cursor: pointer;
+    font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 0.76rem; letter-spacing: 0.05em;
+    background: var(--accent); color: var(--on-accent); padding: 0 16px; min-height: 40px; flex-shrink: 0;
+  }
+  .btn:hover { background: var(--accent-strong); }
+
+  .alert-log { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
+  .alert-log li { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 0.82rem; }
+  .alert-log .a-time { display: block; font-family: "IBM Plex Mono", monospace; font-size: 0.58rem; letter-spacing: 0.06em; color: var(--ink-soft); margin-top: 3px; }
+
+  .punch-grid { display: flex; gap: 7px; flex-wrap: wrap; margin: 8px 0; }
+  .punch { width: 30px; height: 30px; border-radius: 50%; border: 1px dashed var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.82rem; }
+  .punch.filled { background: var(--accent); border-style: solid; border-color: var(--accent); color: var(--on-accent); }
+
+  .stage-track { display: flex; align-items: center; margin-top: 10px; }
+  .stage { flex: 1; text-align: center; font-family: "IBM Plex Mono", monospace; font-size: 0.58rem; letter-spacing: 0.04em; color: var(--ink-soft); position: relative; padding-top: 16px; }
+  .stage::before { content: ''; position: absolute; top: 4px; left: 50%; transform: translateX(-50%); width: 9px; height: 9px; border-radius: 50%; background: var(--surface-2); border: 2px solid var(--border); }
+  .stage.done::before { background: var(--ok); border-color: var(--ok); }
+  .stage.current::before { background: var(--accent); border-color: var(--accent); }
+  .stage.current { color: var(--accent-strong); font-weight: 600; }
+
+  .event-card2 { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .event-card2 h4 { margin: 0 0 4px; font-size: 0.9rem; }
+  .event-card2 .sub { font-size: 0.74rem; color: var(--ink-soft); }
+
+  .sync-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  @media (max-width: 420px) { .sync-grid { grid-template-columns: 1fr; } }
+  .sync-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 9px 11px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .sync-card .name { font-weight: 600; font-size: 0.82rem; }
+  .sync-card .status { font-family: "IBM Plex Mono", monospace; font-size: 0.58rem; letter-spacing: 0.05em; color: var(--ok); display: flex; align-items: center; gap: 4px; }
+  .sync-card .status .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--ok); }
+
+  .calc-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .calc-row select {
+    flex: 1 1 160px; font-size: 16px; padding: 9px 11px; min-height: 40px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--surface-2); color: var(--ink); font-family: "IBM Plex Mono", monospace;
+  }
+  .calc-out { margin-top: 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 11px 13px; }
+  .calc-out .offer { font-family: "Big Shoulders Display", sans-serif; font-weight: 800; font-size: 1.4rem; }
+  .calc-out .script { font-size: 0.8rem; color: var(--ink-soft); margin-top: 5px; }
+
+  .auth-layout { display: flex; gap: 12px; flex-wrap: wrap; }
+  .auth-thumb { flex: 0 0 auto; width: 68px; height: 68px; border-radius: 10px; background: linear-gradient(135deg, var(--surface-2) 0%, var(--bg) 100%); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+  .check-list { list-style: none; margin: 0; padding: 0; flex: 1 1 180px; min-width: 0; display: grid; gap: 5px; }
+  .check-list li { display: flex; align-items: center; gap: 7px; font-size: 0.78rem; }
+  .check-list .ck { flex: 0 0 auto; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 700; background: var(--ok); color: var(--bg); }
+  .verdict-badge {
+    margin-top: 10px; display: inline-flex; align-items: center; gap: 6px;
+    font-family: "IBM Plex Mono", monospace; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.05em;
+    color: var(--ok); border: 1px solid var(--ok); border-radius: 999px; padding: 5px 12px;
+  }
+
+  .pw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  @media (max-width: 420px) { .pw-grid { grid-template-columns: 1fr; } }
+  .pw-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 9px 11px; min-width: 0; }
+  .pw-card h4 { margin: 0; font-size: 0.8rem; font-weight: 600; }
+  .pw-card .sub { font-size: 0.66rem; color: var(--ink-soft); margin: 1px 0 5px; }
+  .pw-row { display: flex; align-items: flex-end; gap: 7px; }
+  .pw-price { font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 0.88rem; }
+  .delta { font-family: "IBM Plex Mono", monospace; font-size: 0.62rem; font-weight: 600; border-radius: 999px; padding: 2px 7px; }
+  .delta.up { color: var(--ok); background: rgba(127, 176, 105, 0.12); }
+  .delta.down { color: var(--warn); background: rgba(201, 111, 74, 0.14); }
+  .spark { display: block; width: 100%; height: 30px; margin-top: 4px; }
+  .spark polyline { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+
+  .inv-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .inv-toolbar label { font-family: "IBM Plex Mono", monospace; font-size: 0.62rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); }
+  .inv-toolbar select { font-size: 0.78rem; padding: 7px 9px; min-height: 36px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2); color: var(--ink); font-family: "IBM Plex Mono", monospace; }
+  .inv-toolbar .btn { padding: 0 11px; min-height: 36px; font-size: 0.7rem; background: transparent; border: 1px solid var(--border); color: var(--ink); }
+  .inv-toolbar .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .inv-status { font-family: "IBM Plex Mono", monospace; font-size: 0.66rem; color: var(--ink-soft); margin: 0 0 10px; }
+  .inv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  @media (max-width: 420px) { .inv-grid { grid-template-columns: 1fr; } }
+  .inv-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 9px 11px; min-width: 0; }
+  .inv-card h4 { margin: 0; font-size: 0.8rem; font-weight: 600; }
+  .inv-card .sub { font-size: 0.66rem; color: var(--ink-soft); margin: 1px 0 5px; }
+  .inv-price { font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 0.88rem; }
+  .inv-price.is-stale { color: var(--ink-soft); }
+
+  .cal-week { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; }
+  @media (max-width: 460px) { .cal-week { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+  .cal-day { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; min-height: 90px; padding: 5px; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .cal-day .dow { font-family: "IBM Plex Mono", monospace; font-size: 0.58rem; font-weight: 600; letter-spacing: 0.06em; color: var(--ink-soft); text-transform: uppercase; }
+  .cal-day .dom { font-family: "Big Shoulders Display", sans-serif; font-weight: 800; font-size: 0.95rem; line-height: 1; }
+  .appt { background: var(--accent-soft); border: 1px solid var(--accent); color: var(--ink); border-radius: 6px; padding: 3px 5px; font-size: 0.6rem; line-height: 1.25; overflow-wrap: anywhere; }
+  .appt b { color: var(--accent-strong); font-weight: 600; display: block; }
+
+  .callrow { display: flex; justify-content: space-between; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.82rem; }
+  .callrow:last-child { border-bottom: none; }
+  .callrow .ct { font-family: "IBM Plex Mono", monospace; font-size: 0.66rem; color: var(--ink-soft); flex: 0 0 auto; }
+  .callrow .outcome { color: var(--ok); font-size: 0.72rem; }
+
+  .site-shot { width: 100%; border-radius: 8px; border: 1px solid var(--border); display: block; margin-bottom: 8px; }
+  .seo-checklist { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; }
+  .seo-checklist li { display: flex; align-items: center; gap: 7px; font-size: 0.76rem; }
+  .seo-checklist .tick { flex: 0 0 auto; width: 16px; height: 16px; border-radius: 50%; background: var(--ok); color: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 700; }
+  @media (max-width: 420px) { .seo-checklist { grid-template-columns: 1fr; } }
+
+  .ig-card2 { display: flex; gap: 10px; align-items: center; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 10px; }
+  .ig-thumb { flex: 0 0 auto; width: 44px; height: 44px; border-radius: 8px; background: radial-gradient(circle at 30% 30%, rgba(212,169,74,0.35), transparent 55%), radial-gradient(circle at 70% 70%, rgba(240,199,102,0.25), transparent 55%), var(--surface); }
+  .ig-card2 p { margin: 0; font-size: 0.8rem; }
+  .ig-card2 .meta { font-family: "IBM Plex Mono", monospace; font-size: 0.6rem; color: var(--ink-soft); margin-top: 3px; display: block; }
+
+  footer.foot { border-top: 1px solid var(--border); padding: 12px clamp(16px, 3vw, 32px); }
+  footer.foot p { margin: 0; font-family: "IBM Plex Mono", monospace; font-size: 0.62rem; color: var(--ink-soft); opacity: 0.8; }
+
+  /* ============ Narrow screens: sidebar becomes a horizontal tab bar ============ */
+  @media (max-width: 720px) {
+    body { flex-direction: column; }
+    aside.sidebar { flex: 0 0 auto; width: 100%; height: auto; position: relative; border-right: none; border-bottom: 1px solid var(--border); }
+    .sb-shop, .sb-footer { display: none; }
+    nav.sb-nav { flex-direction: row; flex-wrap: wrap; padding: 8px; gap: 6px; }
+    nav.sb-nav button { flex: 1 1 auto; justify-content: center; padding: 8px 10px; font-size: 0.78rem; }
+    .topbar .clock { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sb-brand">
+    <span class="wordmark">LEONY<span class="x">X</span></span>
+    <div class="subtitle">TCG Command Center</div>
+  </div>
+  <div class="sb-shop">
+    <div class="sb-shop-avatar">N</div>
+    <div>
+      <div class="sb-shop-name">Northside Cards</div>
+      <div class="sb-shop-sub">Demo workspace</div>
+    </div>
+  </div>
+  <nav class="sb-nav" id="sbNav" role="tablist" aria-label="Command Center sections">
+    <button type="button" data-section="overview" aria-current="true"><span class="ico">◆</span> Overview</button>
+    <button type="button" data-section="sales"><span class="ico">☎</span> Sales &amp; Leads</button>
+    <button type="button" data-section="inventory"><span class="ico">$</span> Inventory &amp; Pricing</button>
+    <button type="button" data-section="marketing"><span class="ico">◎</span> Marketing &amp; Growth</button>
+    <button type="button" data-section="ops"><span class="ico">▤</span> Operations</button>
+  </nav>
+  <div class="sb-footer">Demo workspace for a fictional shop — illustrates real Leonyx capabilities. Some data is live, some simulated; each widget is labeled.</div>
+</aside>
+
+<main class="main">
+  <header class="topbar">
+    <div>
+      <h1 id="pageTitle">Overview</h1>
+      <p class="kicker" id="pageKicker">Everything running for your shop, in one place</p>
+    </div>
+    <div class="clock">
+      <b id="clockTime">--:--</b>
+      <span id="clockDate">-</span>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- ============ OVERVIEW ============ -->
+    <section class="section active" id="section-overview">
+      <p class="section-intro">
+        Real vendor command centers (BinderPOS, Storepass, ShadowPOS) work the same way: one dashboard
+        unifying live sales, inventory, and pricing instead of a spreadsheet and six browser tabs.<sup>1</sup>
+        This is that idea, built for a Pokémon/TCG vendor — <b>everything below is one of Leonyx's real capabilities</b>,
+        organized the way you'd actually use them day to day.
+      </p>
+      <div class="widget-grid kpis" id="kpiGrid"><!-- built by JS --></div>
+      <div class="widget-grid" style="margin-top:16px;">
+        <div class="widget">
+          <div class="widget-head"><h3>Today's Activity</h3><span class="badge sim">SIMULATED</span></div>
+          <div class="widget-body">
+            <div id="activityFeed"><!-- built by JS --></div>
+          </div>
+        </div>
+        <div class="widget">
+          <div class="widget-head"><h3>Inventory Snapshot</h3><span class="badge live"><span class="dot"></span>LIVE DATA</span></div>
+          <div class="widget-body">
+            <div class="inv-grid" id="overviewInvGrid"><!-- built by JS, top movers --></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SALES & LEADS ============ -->
+    <section class="section" id="section-sales">
+      <p class="section-intro">Every way a customer reaches your shop, handled automatically instead of falling through the cracks.</p>
+      <div class="widget-grid">
+        <div class="widget">
+          <div class="widget-head"><h3>AI Receptionist — Call Log</h3><span class="badge sim">SIMULATED</span></div>
+          <div class="widget-body">
+            <div class="mini-stats" style="margin-bottom:10px;">
+              <div class="mini-stat"><div class="v">12</div><div class="l">Calls answered today</div></div>
+              <div class="mini-stat"><div class="v">0</div><div class="l">Missed</div></div>
+              <div class="mini-stat"><div class="v">&lt;1s</div><div class="l">Avg response</div></div>
+            </div>
+            <div id="callLog"><!-- built by JS --></div>
+          </div>
+        </div>
+        <div class="widget">
+          <div class="widget-head"><h3>Review Requests</h3><span class="badge sim">SIMULATED</span></div>
+          <div class="widget-body">
+            <div class="mini-stats" id="reviewStats"><!-- built by JS --></div>
+          </div>
+        </div>
+        <div class="widget">
+          <div class="widget-head"><h3>Restock &amp; Want-List Alerts</h3><span class="badge sim">SIMULATED</span></div>
+          <div class="widget-body">
+            <form class="field-row" id="wantlistForm" autocomplete="off">
+              <input type="text" id="wantlistName" placeholder="Customer name" aria-label="Customer name">
+              <input type="text" id="wantlistCard" placeholder="Card they want" aria-label="Card wanted">
+              <button type="submit" class="btn">NOTIFY WHEN IN STOCK</button>
+            </form>
+            <ul class="alert-log" id="wantlistLog"></ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ INVENTORY & PRICING ============ -->
+    <section class="section" id="section-inventory">
+      <p class="section-intro">The real proof: live market prices below are fetched right now from a public pricing API, not scripted.</p>
+      <div class="widget-grid">
+        <div class="widget">
+          <div class="widget-head"><h3>Live Inventory Value</h3><span class="badge live" id="invLiveBadge"><span class="dot"></span>LIVE DATA</span></div>
+          <div class="widget-body">
+            <div class="inv-toolbar">
+              <label for="invInterval">Refresh every</label>
+              <select id="invInterval">
+                <option value="3600000">1 hour</option>
+                <option value="21600000">6 hours</option>
+                <option value="43200000">12 hours</option>
+                <option value="86400000" selected>24 hours</option>
+                <option value="172800000">48 hours</option>
+                <option value="0">Manual only</option>
+              </select>
+              <button type="button" class="btn" id="invRefreshNow">REFRESH NOW</button>
+            </div>
+            <p class="inv-status" id="invStatus">Fetching live prices…</p>
+            <div class="inv-grid" id="invGrid"></div>
+          </div>
+        </div>
+        <div class="widget">
+          <div class="widget-head"><h3>Auto-Generated Buylist Offers</h3><span class="badge sim">USES LIVE FEED</span></div>
+          <div class="widget-body">
+            <div class="calc-row">
+              <select id="buylistCard" aria-label="Choose a card"></select>
+              <button type="button" class="btn" id="buylistGo">GET OFFER</button>
+            </div>
+            <div class="calc-out" id="buylistOut" style="display:none;"></div>
+          </div>
+        </div>
+        <div class="widget">
+          <div class="widget-head"><h3>Multi-Platform Sync</h3><span class="badge sim">SIMULATED</span></div>
+          <div class="widget-body">
+            <div class="sync-grid" id="syncGrid"></div>
+            <div class="mini-stats" style="margin-top:10px;"><div class="mini-stat"><div class="v">4</div><div class="l">Oversells prevented this month</div></div></div>
+          </div>
+        </div>
+        <div class="widget">
+          <div class="widget-head"><h3>Price Watch (Slabs)</h3><span class="badge sim">SIMULATED</span></div>
+          <div class="widget-body">
+            <div class="pw-grid" id="pwGrid"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ MARKETING & GROWTH ============ -->
+    <section class="section" id="section-marketing">
+      <p class="section-intro">Getting found, getting repeat visits, and staying visible without a second full-time job.</p>
+      <div class="widget-grid">
+        <div class="widget">
+          <div class="widget-head"><h3>Website &amp; SEO</h3><span class="badge live"><span class="dot"></span>REAL SITE</span></div>
+          <div class="widget-body">
+            <img class="site-shot" src="northsidetcg-real.jpg" alt="Real screenshot of northsidetcg.com, built by Leonyx">
+            <ul class="seo-checklist">
+              <li><span class="tick" aria-hidden="true">✓</span> Title &amp; meta description</li>
+              <li><span class="tick" aria-hidden="true">✓</span> LocalBusiness schema</li>
+              <li><span class="tick" aria-hidden="true">✓</span> Mobile speed 95+</li>
+              <li><span class="tick" aria-hidden="true">✓</span> Local pages indexed</li>
+            </ul>
+          </div>
+        </div>
+        <div class="widget">
+          <div class="widget-head"><h3>Auto-Post Feed</h3><span class="badge sim">SIMULATED</span></div>
+          <div class="widget-body">
+            <div class="ig-card2">
+              <div class="ig-thumb" aria-hidden="true"></div>
+              <div>
+                <p>🔥 New PSA 10 Umbreon VMAX alt art just hit our case — ask about trade credit.</p>
+                <span class="meta">AUTO-POSTED 02:14 · WHILE YOU SLEPT</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="widget">
+          <div class="widget-head"><h3>Loyalty &amp; Rewards</h3><span class="badge sim">SIMULATED</span></div>
+          <div class="widget-body">
+            <p class="mono-label" style="margin-bottom:4px;">M. Ortiz · Punch Card</p>
+            <div class="punch-grid" id="punchGrid"></div>
+            <p style="font-size:0.84rem;margin:6px 0 0;">7 of 10 — <b style="color:var(--accent-strong)">3 more for a free booster pack</b>, applied automatically.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ OPERATIONS ============ -->
+    <section class="section" id="section-ops">
+      <p class="section-intro">Bookings, events, grading, and authenticity — the back-office work that used to live on paper.</p>
+      <div class="widget-grid">
+        <div class="widget">
+          <div class="widget-head"><h3>Booking Calendar</h3><span class="badge sim">SIMULATED</span></div>
+          <div class="widget-body">
+            <div class="cal-week" id="calWeek"></div>
+          </div>
+        </div>
+        <div class="widget">
+          <div class="widget-head"><h3>Event &amp; Tournament</h3><span class="badge live"><span class="dot"></span>REAL DATE</span></div>
+          <div class="widget-body">
+            <div class="event-card2" id="eventCard"></div>
+          </div>
+        </div>
+        <div class="widget">
+          <div class="widget-head"><h3>Grading Submission Tracker</h3><span class="badge sim">SIMULATED</span></div>
+          <div class="widget-body">
+            <form class="field-row" id="submissionForm" autocomplete="off">
+              <input type="text" id="submissionId" placeholder="Enter submission ID (try 4471)" aria-label="Submission ID">
+              <button type="submit" class="btn">CHECK STATUS</button>
+            </form>
+            <div id="submissionResult"></div>
+          </div>
+        </div>
+        <div class="widget">
+          <div class="widget-head"><h3>Authenticity Pre-Check</h3><span class="badge sim">SCRIPTED EXAMPLE</span></div>
+          <div class="widget-body">
+            <div class="auth-layout">
+              <div class="auth-thumb" aria-hidden="true">🃏</div>
+              <ul class="check-list">
+                <li><span class="ck">✓</span> Font weight &amp; kerning match</li>
+                <li><span class="ck">✓</span> Holo pattern consistent</li>
+                <li><span class="ck">✓</span> Cardstock / light-test pass</li>
+                <li><span class="ck">✓</span> Color saturation in range</li>
+              </ul>
+            </div>
+            <span class="verdict-badge">✓ LIKELY AUTHENTIC — CONFIRM WITH LOUPE</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <footer class="foot">
+    <p>Demo workspace — Northside Cards is fictional. Live Inventory Value and Buylist Offers use a real public pricing API (api.pokemontcg.io); everything else is a labeled simulation. Sources: 1. BinderPOS / Storepass / ShadowPOS platform feature research, 2026.</p>
+  </footer>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ================= Seeded deterministic utilities ================= */
+  function xmur3(str) {
+    var h = 1779033703 ^ str.length;
+    for (var i = 0; i < str.length; i++) {
+      h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+      h = (h << 13) | (h >>> 19);
+    }
+    return function () {
+      h = Math.imul(h ^ (h >>> 16), 2246822507);
+      h = Math.imul(h ^ (h >>> 13), 3266489909);
+      return (h ^= h >>> 16) >>> 0;
+    };
+  }
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      var t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function seeded(id) { return mulberry32(xmur3('leonyx-cc:' + id)()); }
+
+  var els = {};
+  ['kpiGrid','activityFeed','overviewInvGrid','callLog','reviewStats',
+   'wantlistForm','wantlistName','wantlistCard','wantlistLog',
+   'invLiveBadge','invInterval','invRefreshNow','invStatus','invGrid',
+   'buylistCard','buylistGo','buylistOut','syncGrid','pwGrid',
+   'punchGrid','calWeek','eventCard','submissionForm','submissionId','submissionResult'
+  ].forEach(function (id) { els[id] = document.getElementById(id); });
+
+  /* ================= Sidebar nav ================= */
+  var TITLES = {
+    overview: ['Overview', "Everything running for your shop, in one place"],
+    sales: ['Sales & Leads', 'Every way a customer reaches you'],
+    inventory: ['Inventory & Pricing', 'Real-time value, zero manual repricing'],
+    marketing: ['Marketing & Growth', 'Found online, remembered after'],
+    ops: ['Operations', 'Booking, events, grading, authenticity']
+  };
+  document.getElementById('sbNav').addEventListener('click', function (e) {
+    var btn = e.target.closest('button[data-section]');
+    if (!btn) return;
+    var key = btn.getAttribute('data-section');
+    Array.prototype.forEach.call(document.querySelectorAll('#sbNav button'), function (b) {
+      b.setAttribute('aria-current', String(b === btn));
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.section'), function (s) {
+      s.classList.toggle('active', s.id === 'section-' + key);
+    });
+    document.getElementById('pageTitle').textContent = TITLES[key][0];
+    document.getElementById('pageKicker').textContent = TITLES[key][1];
+    window.scrollTo(0, 0);
+  });
+
+  /* ================= Clock ================= */
+  function tickClock() {
+    var now = new Date();
+    document.getElementById('clockTime').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    document.getElementById('clockDate').textContent = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  }
+  tickClock();
+  setInterval(tickClock, 30000);
+
+  /* ================= Panel 4 — Price Watch (deterministic) ================= */
+  var PW_CARDS = [
+    { id: 'charizard-bsu', name: 'Charizard · Base Set (Unlimited)', grade: 'PSA 10', start: 17900 },
+    { id: 'umbreon-vmax',  name: 'Umbreon VMAX · Alt Art',           grade: 'PSA 10', start: 1170 },
+    { id: 'blastoise-bs',  name: 'Blastoise · Base Set Holo',        grade: 'PSA 9',  start: 3940 },
+    { id: 'lugia-ng',      name: 'Lugia · Neo Genesis 1st Ed',       grade: 'PSA 9',  start: 2540 }
+  ];
+  function seededSeries(id, start) {
+    var rnd = mulberry32(xmur3('leonyx-cc:' + id)());
+    var pts = [], v = start;
+    for (var i = 0; i < 24; i++) { pts.push(v); v *= 1 + (rnd() - 0.46) * 0.05; }
+    return pts;
+  }
+  function fmtMoney(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+  function renderPriceWatch() {
+    var NS = 'http://www.w3.org/2000/svg';
+    els.pwGrid.textContent = '';
+    PW_CARDS.forEach(function (c) {
+      var series = seededSeries(c.id, c.start);
+      var first = series[0], last = series[series.length - 1];
+      var pct = ((last - first) / first) * 100;
+      var card = document.createElement('div'); card.className = 'pw-card';
+      var h = document.createElement('h4'); h.textContent = c.name;
+      var sub = document.createElement('div'); sub.className = 'sub'; sub.textContent = c.grade + ' · last 30 days';
+      var row = document.createElement('div'); row.className = 'pw-row';
+      var price = document.createElement('span'); price.className = 'pw-price'; price.textContent = fmtMoney(last);
+      var delta = document.createElement('span'); delta.className = 'delta ' + (pct >= 0 ? 'up' : 'down');
+      delta.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%';
+      row.appendChild(price); row.appendChild(delta);
+      var svg = document.createElementNS(NS, 'svg');
+      svg.setAttribute('viewBox', '0 0 120 30'); svg.setAttribute('preserveAspectRatio', 'none'); svg.setAttribute('class', 'spark');
+      var min = Math.min.apply(null, series), max = Math.max.apply(null, series), span = (max - min) || 1;
+      var coords = series.map(function (val, i) {
+        var x = (i / (series.length - 1)) * 120, y = 27 - ((val - min) / span) * 24;
+        return x.toFixed(1) + ',' + y.toFixed(1);
+      }).join(' ');
+      var poly = document.createElementNS(NS, 'polyline'); poly.setAttribute('points', coords); svg.appendChild(poly);
+      card.appendChild(h); card.appendChild(sub); card.appendChild(row); card.appendChild(svg);
+      els.pwGrid.appendChild(card);
+    });
+  }
+
+  /* ================= Live Inventory Value Tracker (real API) ================= */
+  var INV_CARDS = [
+    { id: 'ru1-1',    name: 'Venusaur',  set: 'Pokémon Rumble' },
+    { id: 'ex3-1',    name: 'Absol',     set: 'EX Dragon' },
+    { id: 'ex12-1',   name: 'Aerodactyl',set: 'EX Legend Maker' },
+    { id: 'hgss1-1',  name: 'Arcanine',  set: 'HeartGold & SoulSilver' },
+    { id: 'base4-1',  name: 'Alakazam',  set: 'Base Set 2' },
+    { id: 'pl1-1',    name: 'Ampharos',  set: 'Platinum' },
+    { id: 'mcd19-1',  name: 'Caterpie',  set: "McDonald's Collection 2019" },
+    { id: 'hgss4-1',  name: 'Aggron',    set: 'HS—Triumphant' },
+    { id: 'dv1-1',    name: 'Dratini',   set: 'Dragon Vault' },
+    { id: 'det1-1',   name: 'Bulbasaur', set: 'Detective Pikachu' }
+  ];
+  var INV_API_URL = 'https://api.pokemontcg.io/v2/cards?pageSize=50&page=1';
+  var INV_LS_PRICES = 'leonyx.cc.inventory.prices.v1';
+  var INV_LS_INTERVAL = 'leonyx.cc.inventory.interval.v1';
+  var INV_DEFAULT_INTERVAL = 86400000;
+  var invTimer = null, invFetchInFlight = false;
+
+  function invLoadCache() { try { return JSON.parse(localStorage.getItem(INV_LS_PRICES)) || {}; } catch (_) { return {}; } }
+  function invSaveCache(o) { try { localStorage.setItem(INV_LS_PRICES, JSON.stringify(o)); } catch (_) {} }
+  function invLoadInterval() { var v = null; try { v = localStorage.getItem(INV_LS_INTERVAL); } catch (_) {} return v !== null && v !== '' ? Number(v) : INV_DEFAULT_INTERVAL; }
+  function invSaveInterval(ms) { try { localStorage.setItem(INV_LS_INTERVAL, String(ms)); } catch (_) {} }
+  function invBestPrice(card) {
+    var tp = (card.tcgplayer && card.tcgplayer.prices) || {};
+    var order = ['holofoil', 'normal', 'reverseHolofoil', '1stEditionHolofoil', 'unlimitedHolofoil'];
+    for (var i = 0; i < order.length; i++) { if (tp[order[i]] && typeof tp[order[i]].market === 'number') return tp[order[i]].market; }
+    var cm = (card.cardmarket && card.cardmarket.prices) || {};
+    if (typeof cm.averageSellPrice === 'number') return cm.averageSellPrice;
+    return null;
+  }
+  function invSleep(ms) { return new Promise(function (res) { setTimeout(res, ms); }); }
+  async function invFetchWithRetry(attempts) {
+    for (var i = 0; i < attempts; i++) {
+      try { var res = await fetch(INV_API_URL, { cache: 'no-store' }); if (res.ok) return await res.json(); } catch (_) {}
+      if (i < attempts - 1) await invSleep(1000 + i * 500);
+    }
+    return null;
+  }
+  function invFmtMoney(n) { return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d)\.)/g, ','); }
+  function invFmtAgo(ts) {
+    if (!ts) return 'never';
+    var s = Math.max(0, Math.round((Date.now() - ts) / 1000));
+    if (s < 60) return 'just now';
+    var m = Math.round(s / 60); if (m < 60) return m + 'm ago';
+    var h = Math.round(m / 60); if (h < 48) return h + 'h ago';
+    return Math.round(h / 24) + 'd ago';
+  }
+  function invSetStatus(text, reconnecting) {
+    els.invStatus.textContent = text;
+    els.invLiveBadge.classList.toggle('reconnecting', !!reconnecting);
+    els.invLiveBadge.lastChild.textContent = reconnecting ? 'RECONNECTING' : 'LIVE DATA';
+  }
+  function invRender() {
+    var cache = invLoadCache();
+    els.invGrid.textContent = '';
+    INV_CARDS.forEach(function (seed) {
+      var entry = cache[seed.id];
+      var card = document.createElement('div'); card.className = 'inv-card';
+      var h = document.createElement('h4'); h.textContent = seed.name;
+      var sub = document.createElement('div'); sub.className = 'sub';
+      sub.textContent = seed.set + ' · ' + (entry ? invFmtAgo(entry.fetchedAt) : 'never');
+      var row = document.createElement('div');
+      var price = document.createElement('span'); price.className = 'inv-price';
+      if (entry && typeof entry.price === 'number') { price.textContent = invFmtMoney(entry.price); }
+      else { price.textContent = '—'; price.classList.add('is-stale'); }
+      row.appendChild(price);
+      card.appendChild(h); card.appendChild(sub); card.appendChild(row);
+      els.invGrid.appendChild(card);
+    });
+  }
+  function renderOverviewInv() {
+    var cache = invLoadCache();
+    var entries = INV_CARDS.map(function (c) { return { c: c, e: cache[c.id] }; }).filter(function (x) { return x.e && typeof x.e.price === 'number'; });
+    entries.sort(function (a, b) { return b.e.price - a.e.price; });
+    els.overviewInvGrid.textContent = '';
+    entries.slice(0, 4).forEach(function (x) {
+      var card = document.createElement('div'); card.className = 'inv-card';
+      var h = document.createElement('h4'); h.textContent = x.c.name;
+      var sub = document.createElement('div'); sub.className = 'sub'; sub.textContent = x.c.set;
+      var price = document.createElement('div'); price.className = 'inv-price'; price.textContent = invFmtMoney(x.e.price);
+      card.appendChild(h); card.appendChild(sub); card.appendChild(price);
+      els.overviewInvGrid.appendChild(card);
+    });
+    document.getElementById('kpiInvValue').textContent = entries.length
+      ? invFmtMoney(entries.reduce(function (s, x) { return s + x.e.price; }, 0))
+      : '—';
+  }
+  async function invRefresh() {
+    if (invFetchInFlight) return;
+    invFetchInFlight = true;
+    invSetStatus('Refreshing live prices…', false);
+    var data = await invFetchWithRetry(8);
+    invFetchInFlight = false;
+    if (!data || !data.data) { invSetStatus('Live feed unreachable — showing last known values', true); invRender(); renderOverviewInv(); return; }
+    var byId = {}; data.data.forEach(function (c) { byId[c.id] = c; });
+    var cache = invLoadCache(); var now = Date.now(); var hits = 0;
+    INV_CARDS.forEach(function (seed) {
+      var live = byId[seed.id]; if (!live) return;
+      var price = invBestPrice(live); if (price == null) return;
+      hits++;
+      var prev = cache[seed.id];
+      cache[seed.id] = { price: price, prevPrice: prev ? prev.price : null, fetchedAt: now };
+    });
+    invSaveCache(cache); invRender(); renderOverviewInv();
+    invSetStatus(hits > 0 ? ('Live · last refreshed ' + invFmtAgo(now)) : 'Live feed reachable, seed cards not on this page — showing last known values', hits === 0);
+  }
+  function invScheduleNext() {
+    if (invTimer) { clearTimeout(invTimer); invTimer = null; }
+    var interval = invLoadInterval(); if (!interval) return;
+    invTimer = setTimeout(function () { invRefresh().then(invScheduleNext); }, interval);
+  }
+  els.invInterval.addEventListener('change', function () { invSaveInterval(Number(els.invInterval.value)); invScheduleNext(); });
+  var invCooldown = false;
+  els.invRefreshNow.addEventListener('click', function () {
+    if (invCooldown) return; invCooldown = true; setTimeout(function () { invCooldown = false; }, 10000);
+    invRefresh().then(invScheduleNext);
+  });
+  function initInventory() { els.invInterval.value = String(invLoadInterval()); invRender(); renderOverviewInv(); invRefresh().then(invScheduleNext); }
+
+  /* ================= Buylist calculator ================= */
+  var BUY_PCT = 0.65;
+  function populateBuylistSelect() {
+    els.buylistCard.innerHTML = '';
+    INV_CARDS.concat(PW_CARDS.map(function (c) { return { id: c.id, name: c.name, set: c.grade }; })).forEach(function (c) {
+      var opt = document.createElement('option'); opt.value = c.id; opt.textContent = c.name + ' — ' + c.set;
+      els.buylistCard.appendChild(opt);
+    });
+  }
+  function currentMarketPrice(id) {
+    var cache = invLoadCache();
+    if (cache[id] && typeof cache[id].price === 'number') return cache[id].price;
+    var pw = PW_CARDS.filter(function (c) { return c.id === id; })[0];
+    if (pw) return seededSeries(pw.id, pw.start).slice(-1)[0];
+    return 20;
+  }
+  els.buylistGo.addEventListener('click', function () {
+    var id = els.buylistCard.value;
+    var name = els.buylistCard.options[els.buylistCard.selectedIndex].textContent.split(' — ')[0];
+    var market = currentMarketPrice(id);
+    var offerCash = market * BUY_PCT, offerCredit = market * (BUY_PCT + 0.1);
+    els.buylistOut.style.display = 'block';
+    els.buylistOut.innerHTML =
+      '<div class="offer">' + invFmtMoney(offerCash) + ' cash</div>' +
+      '<div class="script">or ' + invFmtMoney(offerCredit) + ' store credit · today&rsquo;s market price ' + invFmtMoney(market) + ' for ' + name + '</div>';
+  });
+
+  /* ================= Sync / Reviews / Wantlist / Loyalty / Submission / Event ================= */
+  var SYNC_PLATFORMS = ['TCGplayer', 'eBay', 'Shopify', 'In-Store POS'];
+  function renderSync() {
+    els.syncGrid.innerHTML = '';
+    SYNC_PLATFORMS.forEach(function (name) {
+      var c = document.createElement('div'); c.className = 'sync-card';
+      c.innerHTML = '<span class="name">' + name + '</span><span class="status"><span class="dot"></span>SYNCED</span>';
+      els.syncGrid.appendChild(c);
+    });
+  }
+  function renderReviews() {
+    els.reviewStats.innerHTML =
+      '<div class="mini-stat"><div class="v">38</div><div class="l">Requests sent</div></div>' +
+      '<div class="mini-stat"><div class="v">24</div><div class="l">Reviews posted</div></div>' +
+      '<div class="mini-stat"><div class="v">4.9★</div><div class="l">Avg rating</div></div>';
+  }
+  var WANTLIST_SEED = [
+    { who: '3 customers', card: 'Umbreon VMAX Alt Art', when: '2 DAYS AGO' },
+    { who: '1 customer', card: 'Charizard ex Special Illustration Rare', when: '5 DAYS AGO' }
+  ];
+  function renderWantlist() {
+    els.wantlistLog.innerHTML = '';
+    WANTLIST_SEED.forEach(function (e) {
+      var li = document.createElement('li');
+      li.innerHTML = '🔔 <b>' + e.who + '</b> notified — ' + e.card + ' back in stock<span class="a-time">' + e.when + '</span>';
+      els.wantlistLog.appendChild(li);
+    });
+  }
+  els.wantlistForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = els.wantlistName.value.trim(), card = els.wantlistCard.value.trim();
+    if (!name || !card) return;
+    var li = document.createElement('li');
+    li.innerHTML = '✓ Saved for <b>' + name + '</b> — notified when ' + card + ' is back.<span class="a-time">JUST NOW · SIMULATED</span>';
+    els.wantlistLog.insertBefore(li, els.wantlistLog.firstChild);
+    els.wantlistName.value = ''; els.wantlistCard.value = '';
+  });
+  function renderPunchCard() {
+    els.punchGrid.innerHTML = '';
+    for (var i = 0; i < 10; i++) {
+      var p = document.createElement('div'); p.className = 'punch' + (i < 7 ? ' filled' : ''); p.textContent = i < 7 ? '✓' : '';
+      els.punchGrid.appendChild(p);
+    }
+  }
+  var SUBMISSION_STAGES = ['Received', 'Grading', 'QA Review', 'Shipped'];
+  function submissionLookup(id) {
+    var rnd = seeded('submission:' + id);
+    return { stageIdx: Math.floor(rnd() * 3) + 1, etaDays: 20 + Math.floor(rnd() * 30) };
+  }
+  els.submissionForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var id = els.submissionId.value.trim(); if (!id) return;
+    var r = submissionLookup(id);
+    var track = document.createElement('div'); track.className = 'stage-track';
+    SUBMISSION_STAGES.forEach(function (label, i) {
+      var s = document.createElement('div'); s.className = 'stage' + (i < r.stageIdx ? ' done' : i === r.stageIdx ? ' current' : ''); s.textContent = label;
+      track.appendChild(s);
+    });
+    var eta = document.createElement('p'); eta.style.cssText = 'margin-top:10px;color:var(--ink-soft);font-size:0.8rem;';
+    eta.textContent = 'Submission #' + id + ' — in ' + SUBMISSION_STAGES[r.stageIdx] + ' · est. ' + r.etaDays + ' business days remaining';
+    els.submissionResult.innerHTML = ''; els.submissionResult.appendChild(track); els.submissionResult.appendChild(eta);
+  });
+  function renderEvent() {
+    els.eventCard.innerHTML =
+      '<h4>Northside TCG Expo</h4><div class="sub">Sat Aug 29 &ndash; Sun Aug 30 · 12:00 PM &ndash; 7:00 PM · 2-Day Expo</div>' +
+      '<div class="mini-stats" style="margin-top:10px;">' +
+      '<div class="mini-stat"><div class="v">2</div><div class="l">Show days</div></div>' +
+      '<div class="mini-stat"><div class="v">43</div><div class="l">RSVP&rsquo;d to booth</div></div>' +
+      '<div class="mini-stat"><div class="v">3d</div><div class="l">Reminder auto-sent</div></div></div>';
+  }
+
+  /* ================= Overview: KPIs + activity + calendar + call log ================= */
+  function renderKpis() {
+    els.kpiGrid.innerHTML =
+      '<div class="widget kpi"><div class="v" id="kpiInvValue">—</div><div class="l">Live inventory value tracked</div></div>' +
+      '<div class="widget kpi"><div class="v">12</div><div class="l">Calls answered today</div></div>' +
+      '<div class="widget kpi"><div class="v">9</div><div class="l">New leads this week</div></div>' +
+      '<div class="widget kpi"><div class="v">2d</div><div class="l">Until Northside TCG Expo</div></div>' +
+      '<div class="widget kpi"><div class="v">3</div><div class="l">Customers near a reward</div></div>' +
+      '<div class="widget kpi"><div class="v">2</div><div class="l">Pending PSA submissions</div></div>';
+  }
+  var ACTIVITY = [
+    ['9:14 AM', 'AI receptionist answered a buylist pricing call'],
+    ['10:02 AM', 'Review request auto-sent after checkout'],
+    ['11:47 AM', 'Valuation appointment booked via chat'],
+    ['1:20 PM', 'Restock alert sent to 3 customers'],
+    ['2:05 PM', 'New inventory auto-posted to Instagram']
+  ];
+  function renderActivity() {
+    document.getElementById('activityFeed').innerHTML = ACTIVITY.map(function (a) {
+      return '<div class="callrow"><span>' + a[1] + '</span><span class="ct">' + a[0] + '</span></div>';
+    }).join('');
+  }
+  var CALLS = [
+    ['9:14 AM', 'Buylist pricing — Charizard', 'Answered · quoted $85'],
+    ['10:02 AM', 'PSA grading question', 'Answered · explained intake'],
+    ['11:47 AM', 'Collection valuation', 'Booked appointment'],
+    ['1:30 PM', 'Store hours inquiry', 'Answered instantly']
+  ];
+  function renderCallLog() {
+    els.callLog.innerHTML = CALLS.map(function (c) {
+      return '<div class="callrow"><span>' + c[1] + '<br><span class="outcome">' + c[2] + '</span></span><span class="ct">' + c[0] + '</span></div>';
+    }).join('');
+  }
+  var DAYS = [{ dow: 'Mon', dom: 31 }, { dow: 'Tue', dom: 1 }, { dow: 'Wed', dom: 2 }, { dow: 'Thu', dom: 3 }, { dow: 'Fri', dom: 4 }];
+  var BOOKED = [
+    { day: 1, time: '11:00 AM', label: 'M. Ortiz · collection' },
+    { day: 2, time: '2:30 PM', label: 'D. Kim · PSA batch' },
+    { day: 4, time: '10:30 AM', label: 'Walk-in · binder review' }
+  ];
+  function renderCalendar() {
+    els.calWeek.innerHTML = '';
+    DAYS.forEach(function (d, di) {
+      var col = document.createElement('div'); col.className = 'cal-day';
+      col.innerHTML = '<div class="dow">' + d.dow + '</div><div class="dom">' + d.dom + '</div>';
+      BOOKED.filter(function (a) { return a.day === di; }).forEach(function (a) {
+        var el = document.createElement('div'); el.className = 'appt';
+        el.innerHTML = '<b>' + a.time + '</b>' + a.label;
+        col.appendChild(el);
+      });
+      els.calWeek.appendChild(col);
+    });
+  }
+
+  /* ================= Boot ================= */
+  renderKpis();
+  renderActivity();
+  renderCallLog();
+  renderPriceWatch();
+  populateBuylistSelect();
+  renderSync();
+  renderReviews();
+  renderWantlist();
+  renderPunchCard();
+  renderCalendar();
+  renderEvent();
+  initInventory();
+})();
+</script>
+</body>
+</html>
