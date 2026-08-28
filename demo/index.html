@@ -494,7 +494,16 @@
     position: relative;
     background: var(--surface-2);
   }
-  .ba-real-frame { width: 100%; height: 100%; border: 0; display: block; }
+  /* The real site has its own sticky top nav we don't control (cross-origin,
+     can't reach inside it) — clip it by rendering the iframe taller than its
+     box and shifting it up, so the nav renders off-screen above the crop. */
+  .ba-real-frame {
+    width: 100%;
+    height: calc(100% + 310px);
+    margin-top: -310px;
+    border: 0;
+    display: block;
+  }
   .ba-real-fallback {
     position: absolute; inset: 0; display: none;
     align-items: center; justify-content: center; text-align: center;
