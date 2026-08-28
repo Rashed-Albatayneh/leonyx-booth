@@ -253,6 +253,27 @@
   .callrow .outcome { color: var(--ok); font-size: 0.72rem; }
 
   .site-shot { width: 100%; border-radius: 8px; border: 1px solid var(--border); display: block; margin-bottom: 8px; }
+  .ba-toggle { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; margin-bottom: 10px; }
+  .ba-toggle button {
+    appearance: none; border: 0; background: transparent; cursor: pointer;
+    font-family: "IBM Plex Mono", monospace; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em;
+    color: var(--ink-soft); padding: 7px 14px; min-height: 34px;
+  }
+  .ba-toggle button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+  .ba-before-card {
+    background: #d9d4c7; color: #4a463c; border-radius: 8px; padding: clamp(12px, 2vw, 18px); margin-bottom: 10px;
+  }
+  .ba-before-card .fake-url { font-family: "IBM Plex Mono", monospace; font-size: 0.64rem; color: #7a756a; margin: 0 0 6px; }
+  .ba-before-card h4 { font-family: Georgia, serif; font-size: 1rem; margin: 0 0 6px; color: #5a5548; font-weight: 400; }
+  .ba-before-card p { font-size: 0.76rem; margin: 0 0 8px; color: #6b665a; }
+  .ba-before-card .rank-badges { display: flex; flex-wrap: wrap; gap: 5px; }
+  .ba-before-card .rank-badges span {
+    font-family: "IBM Plex Mono", monospace; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.04em;
+    background: #c4beae; color: #55503f; border-radius: 4px; padding: 3px 7px;
+  }
+  .ba-after-block { display: none; }
+  .ba-after-block.show { display: block; }
+  .ba-before-block.hide { display: none; }
   .seo-checklist { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; }
   .seo-checklist li { display: flex; align-items: center; gap: 7px; font-size: 0.76rem; }
   .seo-checklist .tick { flex: 0 0 auto; width: 16px; height: 16px; border-radius: 50%; background: var(--ok); color: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 700; }
@@ -429,15 +450,31 @@
       <p class="section-intro">Getting found, getting repeat visits, and staying visible without a second full-time job.</p>
       <div class="widget-grid">
         <div class="widget">
-          <div class="widget-head"><h3>Website &amp; SEO</h3><span class="badge live"><span class="dot"></span>REAL SITE</span></div>
+          <div class="widget-head"><h3>Website &amp; SEO</h3><span class="badge live" id="seoBadge"><span class="dot"></span>REAL SITE</span></div>
           <div class="widget-body">
-            <img class="site-shot" src="northsidetcg-real.jpg" alt="Real screenshot of northsidetcg.com, built by Leonyx">
-            <ul class="seo-checklist">
-              <li><span class="tick" aria-hidden="true">✓</span> Title &amp; meta description</li>
-              <li><span class="tick" aria-hidden="true">✓</span> LocalBusiness schema</li>
-              <li><span class="tick" aria-hidden="true">✓</span> Mobile speed 95+</li>
-              <li><span class="tick" aria-hidden="true">✓</span> Local pages indexed</li>
-            </ul>
+            <div class="ba-toggle" role="group" aria-label="Before or after view">
+              <button type="button" id="seoToggleBefore" aria-pressed="false">BEFORE</button>
+              <button type="button" id="seoToggleAfter" aria-pressed="true">AFTER</button>
+            </div>
+            <div class="ba-before-block hide" id="seoBefore">
+              <div class="ba-before-card">
+                <p class="fake-url">yellowpages-listing.example/northside-tcg (page 4 of results)</p>
+                <h4>northside tcg - card shows | directory listing</h4>
+                <p>No real site. No schedule anyone can find. Just a stale directory entry.</p>
+                <div class="rank-badges">
+                  <span>#47 IN SEARCH</span><span>NO META DESCRIPTION</span><span>NO SCHEMA</span><span>MOBILE SPEED 21</span>
+                </div>
+              </div>
+            </div>
+            <div class="ba-after-block show" id="seoAfter">
+              <img class="site-shot" src="northsidetcg-real.jpg" alt="Real screenshot of northsidetcg.com, built by Leonyx">
+              <ul class="seo-checklist">
+                <li><span class="tick" aria-hidden="true">✓</span> Title &amp; meta description</li>
+                <li><span class="tick" aria-hidden="true">✓</span> LocalBusiness schema</li>
+                <li><span class="tick" aria-hidden="true">✓</span> Mobile speed 95+</li>
+                <li><span class="tick" aria-hidden="true">✓</span> Local pages indexed</li>
+              </ul>
+            </div>
           </div>
         </div>
         <div class="widget">
@@ -893,6 +930,24 @@
       els.calWeek.appendChild(col);
     });
   }
+
+  /* ================= Website & SEO before/after toggle ================= */
+  var seoBefore = document.getElementById('seoBefore');
+  var seoAfter = document.getElementById('seoAfter');
+  var seoToggleBefore = document.getElementById('seoToggleBefore');
+  var seoToggleAfter = document.getElementById('seoToggleAfter');
+  var seoBadge = document.getElementById('seoBadge');
+  function setSeoView(showAfter) {
+    seoBefore.classList.toggle('hide', showAfter);
+    seoAfter.classList.toggle('show', showAfter);
+    seoToggleBefore.setAttribute('aria-pressed', String(!showAfter));
+    seoToggleAfter.setAttribute('aria-pressed', String(showAfter));
+    seoBadge.innerHTML = showAfter
+      ? '<span class="dot"></span>REAL SITE'
+      : '<span class="dot"></span>ILLUSTRATIVE — BEFORE LEONYX';
+  }
+  seoToggleBefore.addEventListener('click', function () { setSeoView(false); });
+  seoToggleAfter.addEventListener('click', function () { setSeoView(true); });
 
   /* ================= Boot ================= */
   renderKpis();
