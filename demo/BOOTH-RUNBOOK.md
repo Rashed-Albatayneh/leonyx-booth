@@ -24,14 +24,15 @@ except the AI receptionist chat when you connect a live model.
   and the back office". Locked panels show the price delta.
 - Shortcuts: `demo/index.html?tier=starter` / `?tier=growth` / `?tier=fullstack`.
 - Everything is labeled SIMULATED except **Live Inventory Value Tracker** (real card
-  prices, real API) and the **Buylist Offers** calculator (computes off that same real
-  feed). Say "demo data" freely for the rest — it's honest, and prospects notice.
+  prices, real API), the **Buylist Offers** calculator (computes off that same real
+  feed), and the **Website & SEO** AFTER view (a real live iframe of northsidetcg.com,
+  not a screenshot). Say "demo data" freely for the rest — it's honest, and prospects notice.
 
 ### Panel guide (13 total) — what to say if someone asks "does it do X?"
 | # | Panel | Tier | One line |
 |---|---|---|---|
 | 1 | AI Phone Receptionist | All | Answers every call, quotes buylist, books valuations 24/7 |
-| 2 | Website Redesign & SEO | Growth+ | Before/after — found on page one instead of buried |
+| 2 | **Website Redesign & SEO** | Growth+ | Before = illustrative; AFTER is a **real live** iframe of northsidetcg.com |
 | 3 | Booking Automation | Growth+ | Calendar + automated SMS reminders, no more empty slots |
 | 4 | Price Watch + Auto-Post | Full Stack | Auto-posts new inventory to social while you're busy |
 | 5 | **Live Inventory Value Tracker** | Full Stack | **Real** live card prices, client sets the refresh rate |
@@ -44,8 +45,9 @@ except the AI receptionist chat when you connect a live model.
 | 12 | **Auto-Generated Buylist Offers** | Full Stack | Instant cash/credit offer off the **real** live price feed |
 | 13 | Authenticity Pre-Check | Full Stack | First-pass "super fake" screen before accepting a buy |
 
-Panels 5 and 12 are the two to point at if someone's skeptical the demo is "just slides" —
-open Settings-free, no key needed, prices update from a real public API right in front of them.
+Panels 2, 5, and 12 are the ones to point at if someone's skeptical the demo is "just
+slides" — panel 2's AFTER view is the actual live site rendering right there, and 5/12
+update from a real public pricing API in front of them. No key needed for any of it.
 
 ## If something goes wrong
 | Symptom | Meaning | Fix |
@@ -56,7 +58,7 @@ open Settings-free, no key needed, prices update from a real public API right in
 | Page looks odd after hours idle | Browser memory | Ctrl+R refresh. Calendar/chat reset to pristine state. |
 | Laptop dies | — | The file is on your phone too (airdrop/cable copy); opens in mobile browser. |
 | Live Inventory panel shows "RECONNECTING" | The real public pricing API (api.pokemontcg.io) is genuinely flaky sometimes — this is expected occasionally, not a bug | It auto-retries and falls back to last-known prices, clearly labeled. Say "showing last known values" and move on, or tap REFRESH NOW after a few seconds. Never blank/broken. |
-| Live Inventory / Buylist panel needs wifi | Both use a real internet API, unlike every other panel | Everything else in the demo works fully offline — only these two need the venue wifi. If wifi is down, skip straight to "and this one runs on live market data too" without opening them. |
+| Live Inventory / Buylist / Website & SEO panel needs wifi | Live Inventory + Buylist use a real pricing API; Website & SEO now embeds the real live northsidetcg.com site (an actual iframe, not a screenshot) | Everything else in the demo works fully offline — only these three need venue wifi. If wifi is down, the Website & SEO panel shows a fallback message with a direct link instead of a blank box after ~6s; skip past the other two without opening them. |
 
 ## Facts for prospect questions
 - Tiers: Starter $997 (AI receptionist) · Growth $1,497 (+ website/SEO, booking + SMS,

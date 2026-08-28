@@ -485,16 +485,23 @@
   }
   .ba-hero p { margin: 4px 0 0; font-size: 0.78rem; font-weight: 600; opacity: 0.85; }
   .ba-after-real { display: flex; flex-direction: column; }
-  .ba-real-scroll {
-    max-height: 220px;
-    overflow-y: auto;
-    overflow-x: hidden;
+  .ba-real-frame-wrap {
+    height: 220px;
     border-radius: 8px;
     border: 1px solid var(--border);
     margin-bottom: 6px;
-    -webkit-overflow-scrolling: touch;
+    overflow: hidden;
+    position: relative;
+    background: var(--surface-2);
   }
-  .ba-real-shot { width: 100%; height: auto; display: block; }
+  .ba-real-frame { width: 100%; height: 100%; border: 0; display: block; }
+  .ba-real-fallback {
+    position: absolute; inset: 0; display: none;
+    align-items: center; justify-content: center; text-align: center;
+    padding: 16px; font-size: 0.8rem; color: var(--ink-soft);
+  }
+  .ba-real-frame-wrap.frame-failed .ba-real-frame { display: none; }
+  .ba-real-frame-wrap.frame-failed .ba-real-fallback { display: flex; }
   .ba-real-label {
     margin: 6px 0 8px;
     font-family: "IBM Plex Mono", ui-monospace, monospace;
@@ -1047,10 +1054,11 @@
           <p class="ba-caption" style="color:#7a756a;">Before — buried in directories</p>
         </div>
         <div class="ba-layer ba-after ba-after-real">
-          <div class="ba-real-scroll">
-            <img class="ba-real-shot" src="northsidetcg-real.jpg" alt="Real screenshot of northsidetcg.com, built by Leonyx">
+          <div class="ba-real-frame-wrap" id="baRealFrameWrap">
+            <iframe class="ba-real-frame" id="baRealFrame" src="https://www.northsidetcg.com/" title="Live view of northsidetcg.com, built by Leonyx" loading="eager" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            <div class="ba-real-fallback">Live site didn&rsquo;t load (no wifi, or the venue network blocks it) — it&rsquo;s real at <a href="https://www.northsidetcg.com/" target="_blank" rel="noopener" style="color:var(--accent);">northsidetcg.com</a></div>
           </div>
-          <p class="ba-real-label">↕ Not a mockup — scroll to see the real northsidetcg.com, built by Leonyx</p>
+          <p class="ba-real-label">↕ Live, not a mockup — this is the real northsidetcg.com, right now</p>
           <ul class="seo-checklist">
             <li><span class="tick" aria-hidden="true">✓</span> Title tag &amp; meta description</li>
             <li><span class="tick" aria-hidden="true">✓</span> LocalBusiness schema markup</li>
@@ -1910,8 +1918,8 @@
     els.baToggleBefore.setAttribute('aria-pressed', String(!showAfter));
     els.baToggleAfter.setAttribute('aria-pressed', String(showAfter));
     els.baCaption.textContent = showAfter
-      ? 'After: found on page one, fast on mobile'
-      : 'Before: buried in directories → press AFTER to wipe';
+      ? 'After: found on page one, fast on mobile — and it’s live right there'
+      : 'Before: buried in directories → press AFTER for the real, live site';
   }
   function maybePlayWipe() {
     if (wipePlayed || reduceMotion) return;
@@ -1921,6 +1929,20 @@
   function cancelPendingWipe() {
     if (wipeTimer) { window.clearTimeout(wipeTimer); wipeTimer = null; }
   }
+
+  /* Live iframe of the real northsidetcg.com — if it hasn't loaded within a few
+     seconds (no wifi, venue network blocks it, etc.) show a fallback link
+     instead of a permanently blank box. */
+  (function () {
+    var wrap = document.getElementById('baRealFrameWrap');
+    var frame = document.getElementById('baRealFrame');
+    if (!wrap || !frame) return;
+    var settled = false;
+    frame.addEventListener('load', function () { settled = true; });
+    window.setTimeout(function () {
+      if (!settled) wrap.classList.add('frame-failed');
+    }, 6000);
+  })();
   els.baToggleBefore.addEventListener('click', function () { cancelPendingWipe(); setWipe(false); });
   els.baToggleAfter.addEventListener('click', function () { cancelPendingWipe(); setWipe(true); });
 
