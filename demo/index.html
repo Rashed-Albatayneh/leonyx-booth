@@ -484,6 +484,27 @@
     text-transform: uppercase;
   }
   .ba-hero p { margin: 4px 0 0; font-size: 0.78rem; font-weight: 600; opacity: 0.85; }
+  .ba-after-real { display: flex; flex-direction: column; }
+  .ba-real-shot {
+    width: 100%; height: auto;
+    max-height: 46%;
+    object-fit: cover;
+    object-position: top;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    display: block;
+  }
+  .ba-real-label {
+    margin: 6px 0 8px;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--ok);
+  }
+  .ba-after-real .seo-checklist { grid-template-columns: 1fr 1fr; gap: 4px 10px; }
+  .ba-after-real .seo-checklist li { font-size: 0.76rem; }
+  @media (max-width: 480px) { .ba-after-real .seo-checklist { grid-template-columns: 1fr; } }
   .seo-checklist { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
   .seo-checklist li {
     display: flex; align-items: center; gap: 8px;
@@ -1024,11 +1045,9 @@
           </div>
           <p class="ba-caption" style="color:#7a756a;">Before — buried in directories</p>
         </div>
-        <div class="ba-layer ba-after">
-          <div class="ba-hero">
-            <h3>Northside Cards</h3>
-            <p>TCG singles · sealed · buylists · PSA drop-off — northsidecards.example</p>
-          </div>
+        <div class="ba-layer ba-after ba-after-real">
+          <img class="ba-real-shot" src="northsidetcg-real.jpg" alt="Real screenshot of northsidetcg.com, built by Leonyx" loading="lazy">
+          <p class="ba-real-label">↑ Not a mockup — the real northsidetcg.com, built by Leonyx</p>
           <ul class="seo-checklist">
             <li><span class="tick" aria-hidden="true">✓</span> Title tag &amp; meta description</li>
             <li><span class="tick" aria-hidden="true">✓</span> LocalBusiness schema markup</li>
@@ -1037,7 +1056,7 @@
           </ul>
         </div>
       </div>
-      <p class="ba-caption" id="baCaption">Before: buried in directories → press AFTER to wipe</p>
+      <p class="ba-caption" id="baCaption">Before: buried in directories → press AFTER for real, live proof</p>
     </div>
   </section>
 
