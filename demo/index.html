@@ -485,15 +485,16 @@
   }
   .ba-hero p { margin: 4px 0 0; font-size: 0.78rem; font-weight: 600; opacity: 0.85; }
   .ba-after-real { display: flex; flex-direction: column; }
-  .ba-real-shot {
-    width: 100%; height: auto;
-    max-height: 46%;
-    object-fit: cover;
-    object-position: top;
+  .ba-real-scroll {
+    max-height: 220px;
+    overflow-y: auto;
+    overflow-x: hidden;
     border-radius: 8px;
     border: 1px solid var(--border);
-    display: block;
+    margin-bottom: 6px;
+    -webkit-overflow-scrolling: touch;
   }
+  .ba-real-shot { width: 100%; height: auto; display: block; }
   .ba-real-label {
     margin: 6px 0 8px;
     font-family: "IBM Plex Mono", ui-monospace, monospace;
@@ -1046,8 +1047,10 @@
           <p class="ba-caption" style="color:#7a756a;">Before — buried in directories</p>
         </div>
         <div class="ba-layer ba-after ba-after-real">
-          <img class="ba-real-shot" src="northsidetcg-real.jpg" alt="Real screenshot of northsidetcg.com, built by Leonyx">
-          <p class="ba-real-label">↑ Not a mockup — the real northsidetcg.com, built by Leonyx</p>
+          <div class="ba-real-scroll">
+            <img class="ba-real-shot" src="northsidetcg-real.jpg" alt="Real screenshot of northsidetcg.com, built by Leonyx">
+          </div>
+          <p class="ba-real-label">↕ Not a mockup — scroll to see the real northsidetcg.com, built by Leonyx</p>
           <ul class="seo-checklist">
             <li><span class="tick" aria-hidden="true">✓</span> Title tag &amp; meta description</li>
             <li><span class="tick" aria-hidden="true">✓</span> LocalBusiness schema markup</li>
